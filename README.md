@@ -1,11 +1,11 @@
 # Sistema de Asistencia: Backend
 
-En este repositorio se encuentran todos los recursos y el codigo necesario para el backend del sistema de asistencia con reconocimiento facial.
+En este repositorio se encuentran todos los recursos y el código necesario para el backend del sistema de asistencia con reconocimiento facial.
 
 ## EC2
 Necesitamos crear una instancia de EC2 para desplegar el Web Server. En este caso utilizaremos Ubuntu 18. Al momento de crear la instancia, asegurarse que en el `Security Group` se permitan los puertos de SSH, HTTP y HTTPS a cualquier IP de origen.
 
-Luego debemos secargar las llaves de acceso para ingresar con SSH, y crear la instancia. Para ingresar a la instancia utilizamos el siguiente comando, donde `llaves.pem` es el archivo de llaves que acabamos de descargar y `ec2-3-82-189-61.compute-1.amazonaws.com` es el DNS de nuestra instancia:
+Luego debemos descargar las llaves de acceso para ingresar con SSH, y crear la instancia. Para ingresar a la instancia utilizamos el siguiente comando, donde `llaves.pem` es el archivo de llaves que acabamos de descargar y `ec2-3-82-189-61.compute-1.amazonaws.com` es el DNS de nuestra instancia:
 ```
 ssh -i llaves.pem ubuntu@ec2-3-82-189-61.compute-1.amazonaws.com
 ```
@@ -23,14 +23,14 @@ Podemos utilizar un administrador de procesos para nuestro servidor Node, en est
 sudo npm install pm2 -g
 ```
 ## Certificado SSL
-Asegurarse que openssl esta instalado, correr el comando:
+Asegurarse que openssl está instalado, correr el comando:
 ```
 openssl req -nodes -new -x509 -keyout server.key -out server.cert
 ```
-Este nos hara una serie de preguntas, responderlas concordemente. Cuando nos pregunte el `Common Name` ingresar `localhost` si es un ambiente local o el nombre de dominio de la instancia EC2 si es en el ambiente de produccion (ej: `ec2-3-82-189-61.compute-1.amazonaws.com`).
+Este nos hará una serie de preguntas, responderlas concordemente. Cuando nos pregunte el `Common Name` ingresar `localhost` si es un ambiente local o el nombre de dominio de la instancia EC2 si es en el ambiente de producción (ej: `ec2-3-82-189-61.compute-1.amazonaws.com`).
 
 ## NGINX
-En caso de que en un futuro querramos utilizar un ambiente de produccion mas robusto, balanceo de carga o otro servidor de Node, utilizamos `NGINX`:
+En caso de que en un futuro queramos utilizar un ambiente de producción más robusto, balanceo de carga u otro servidor de Node, utilizamos `NGINX`:
 ```
 sudo apt install nginx
 ```
@@ -68,7 +68,7 @@ server {
 }
 ```
 
-Despues de hacer cualquier cambio, probar si no hay errores `sudo nginx -t` y reiniciar el servicio `sudo service nginx restart`.
+Después de hacer cualquier cambio, probar si no hay errores `sudo nginx -t` y reiniciar el servicio `sudo service nginx restart`.
 
 Ahora podemos clonar el repositorio e iniciar el servidor:
 ```
@@ -76,4 +76,28 @@ git clone https://github.com/canozo/backend-asistencia.git
 cd backend-asistencia
 npm i
 pm2 start app.js
+```
+
+## Variables de entorno
+Para que el servidor se ejecute correctamente necesitamos las siguientes variables de entorno (se pueden colocar en un archivo `.env`):
+```
+# aws
+AWS_ACCESS_KEY_ID= # Access Key ID de usuario con acceso a S3
+AWS_SECRET_ACCESS_KEY_ID= # Secret access Key ID de usuario con acceso a S3
+MAIN_BUCKET= # Nombre del Bucket S3 donde se ingresan las imágenes
+
+# bcrypt
+BCRYPT_SALT= # Iteraciones para bcryptjs (preferencia mayor que 12, ej: 12, 13)
+
+# jwt
+JWT_SALT= # Salt para JSON Web Tokens
+
+# env
+ENVIRONMENT= # Entorno del servidor (development o production)
+
+# database connection
+DB_HOST= # Nombre o IP del host
+DB_USER= # Usuario
+DB_PASSWORD= # Clave de acceso para el usuario
+DB_DATABASE= # Nombre de la base de datos
 ```
