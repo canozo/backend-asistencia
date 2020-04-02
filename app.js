@@ -5,9 +5,6 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const http = require('http');
 const cors = require('cors');
-const fs = require('fs');
-
-const uploadRouter = require('./api/upload/upload');
 
 const app = express();
 const server = http.createServer(app);
@@ -20,7 +17,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
-app.use('/upload', uploadRouter);
+app.use('/api/upload', require('./api/upload'));
+app.use('/api/auth', require('./api/auth'));
+app.use('/api/admin', require('./api/admin'));
 
 app.get('/api', (req, res) => res.json({ status: 'success', msg: 'hola' }));
 

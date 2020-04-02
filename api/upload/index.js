@@ -30,7 +30,10 @@ const upload = multer({
   },
 });
 
+// route: /api/upload/:accountNumber
 router.post('/:accountNumber', upload.single('index-face'), (req, res) => {
+  // TODO check that :accountNumber is a valid student
+  const { accountNumber } = req.params;
   fs.readFile(req.file.path, (err, data) => {
     if (err) {
       return res.status(500).json({ status: 'error', msg: 'Error reading file.'});
@@ -44,7 +47,7 @@ router.post('/:accountNumber', upload.single('index-face'), (req, res) => {
     s3.upload({
       Bucket: process.env.MAIN_BUCKET,
       Key: `index/${req.file.filename}`,
-      Metadata: { AccountNumber: req.params.accountNumber },
+      Metadata: { AccountNumber: accountNumber },
       Body: data,
     }, (s3err, s3data) => {
       if (s3err) {
