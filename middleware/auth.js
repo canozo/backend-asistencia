@@ -131,7 +131,7 @@ auth.register = (req, res, next) => {
         values
         (?, ?, ?, ?, ?, ?)`,
         [idUserType, names, surnames, email.trim().toLowerCase(), hash, accountNumber],
-        (error) => {
+        error => {
           if (error) {
             res.json({ status: 'error', msg: 'Error al registrar usuario' });
           } else {

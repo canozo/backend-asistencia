@@ -20,6 +20,13 @@ app.use(cors());
 app.use('/api/upload', require('./api/upload'));
 app.use('/api/auth', require('./api/auth'));
 app.use('/api/admin', require('./api/admin'));
+// app.use('/api/professor', require('./api/professor'));
+// app.use('/api/student', require('./api/student'));
+app.use('/api/campus', require('./api/campus'));
+app.use('/api/building', require('./api/building'));
+app.use('/api/classroom', require('./api/classroom'));
+app.use('/api/class', require('./api/class'));
+app.use('/api/section', require('./api/section'));
 
 app.get('/api', (req, res) => res.json({ status: 'success', msg: 'hola' }));
 
