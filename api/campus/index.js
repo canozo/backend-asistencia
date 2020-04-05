@@ -8,7 +8,6 @@ const router = express.Router();
 router.get('/', (req, res) => {
   db.query(
     'select id_campus as idCampus, campus, alias from campus',
-    [],
     (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al obtener campus' });
@@ -39,12 +38,24 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
 });
 
 // route: /api/campus/:idCampus
-// TODO update
+router.put('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
+  const { campus, alias } = req.body;
+  db.query(
+    'update campus set campus = ?, alias = ? where id_campus = ?',
+    [campus, alias, req.params.idCampus],
+    (error) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al modificar campus' });
+      } else {
+        res.json({ status: 'success', msg: 'Campus modificado' });
+      }
+    }
+  );
+});
 
-// route: /api/campus
-router.delete('/', auth.getToken, auth.verifyAdmin, (req, res) => {
-  const { idCampus } = req.body;
-  db.query('delete from campus where id_campus = ?', [idCampus], (error) => {
+// route: /api/campus/:idCampus
+router.delete('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
+  db.query('delete from campus where id_campus = ?', [req.params.idCampus], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar campus' });
     } else {

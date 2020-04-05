@@ -1,19 +1,25 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const auth = require('../../middleware/auth');
+const setUserType = require('../../middleware/setUserType');
 
 const router = express.Router();
 
 // route: /api/auth/login
-router.post('/login', auth.getUser, (req, res) => {
-  jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' }, (err, token) => {
-    if (err) {
-      res.json({ status: 'error', msg: 'Error jsonwebtoken' });
-    } else {
-      res.json({ status: 'success', token });
-    }
-  });
+router.post('/login', auth.getUser, auth.signToken, (req, res) => {
+  res.json({ status: 'success', token: req.token });
 });
+
+// route: /api/auth/register
+router.post(
+  '/register',
+  setUserType.student,
+  auth.register,
+  auth.getUser,
+  auth.signToken,
+  (req, res) => {
+    res.json({ status: 'success', token: req.token });
+  }
+);
 
 // route: /api/auth/verify
 router.post('/verify', auth.getToken, auth.verifyAny, (req, res) => {

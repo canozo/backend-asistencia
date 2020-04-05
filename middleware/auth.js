@@ -21,6 +21,17 @@ auth.getToken = (req, res, next) => {
   }
 };
 
+auth.signToken = (req, res, next) => {
+  jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' }, (err, token) => {
+    if (err) {
+      res.json({ status: 'error', msg: 'Error jsonwebtoken' });
+    } else {
+      req.token = token;
+      next();
+    }
+  });
+};
+
 auth.verifyAny = (req, res, next) => {
   jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
     if (err) {
@@ -76,7 +87,7 @@ auth.getUser = (req, res, next) => {
 
   db.query(
     `select id_user, id_user_type, names, surnames, email, password, account_number
-    from users
+    from user
     where email = ?`,
     [email.trim().toLowerCase(), password],
     (error, result) => {
@@ -121,25 +132,28 @@ auth.register = (req, res, next) => {
     return res.json({ status: 'error', msg: 'Clave no valida' });
   }
 
+  if (idUserType === 3 && !regex.accountNum.test(accountNumber)) {
+    return res.json({ status: 'error', msg: 'Numero de cuenta no valido' });
+  }
+
   bcrypt.hash(password, Number(process.env.BCRYPT_SALT), (hashErr, hash) => {
     if (hashErr) {
-      res.json({ status: 'error', msg: 'Error bcryptjs' });
-    } else {
-      db.query(
-        `insert into users
-        (id_user_type, names, surnames, email, password, account_number)
-        values
-        (?, ?, ?, ?, ?, ?)`,
-        [idUserType, names, surnames, email.trim().toLowerCase(), hash, accountNumber],
-        error => {
-          if (error) {
-            res.json({ status: 'error', msg: 'Error al registrar usuario' });
-          } else {
-            next();
-          }
-        }
-      );
+      return res.json({ status: 'error', msg: 'Error bcryptjs' });
     }
+    db.query(
+      `insert into user
+      (id_user_type, names, surnames, email, password, account_number)
+      values
+      (?, ?, ?, ?, ?, ?)`,
+      [idUserType, names, surnames, email.trim().toLowerCase(), hash, accountNumber],
+      (error) => {
+        if (error) {
+          res.json({ status: 'error', msg: 'Error al registrar usuario' });
+        } else {
+          next();
+        }
+      }
+    );
   });
 };
 

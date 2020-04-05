@@ -8,7 +8,6 @@ const router = express.Router();
 router.get('/', (req, res) => {
   db.query(
     'select id_classroom as idClassroom, capacity, alias from classroom',
-    [],
     (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al obtener aulas' });
@@ -54,12 +53,24 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
 });
 
 // route: /api/classroom/:idClassroom
-// TODO update
+router.post('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
+  const { idBuilding, capacity, alias } = req.body;
+  db.query(
+    'update classroom set id_building = ?, capacity = ?, alias = ? where id_classroom = ?',
+    [idBuilding, capacity, alias, req.params.idClassroom],
+    (error) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al modificar aula' });
+      } else {
+        res.json({ status: 'success', msg: 'Aula modificada' });
+      }
+    }
+  );
+});
 
-// route: /api/classroom
-router.delete('/', auth.getToken, auth.verifyAdmin, (req, res) => {
-  const { idClassroom } = req.body;
-  db.query('delete from classroom where id_classroom = ?', [idClassroom], (error) => {
+// route: /api/classroom/:idClassroom
+router.delete('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
+  db.query('delete from classroom where id_classroom = ?', [req.params.idClassroom], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar aula' });
     } else {

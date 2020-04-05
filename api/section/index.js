@@ -6,14 +6,29 @@ const router = express.Router();
 
 // route: /api/section
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
-  const { idClass, idClassroom, idStartTime, idFinishTime, idProfessor, comments } = req.body;
-  const idCreatedBy = req.data.user.idUser;
+  const values = [
+    req.body.idSemester,
+    req.body.idClass,
+    req.body.idClassroom,
+    req.body.idStartTime,
+    req.body.idFinishTime,
+    req.body.idProfessor,
+    req.data.user.idUser,
+    req.body.comments,
+  ];
   db.query(
-    `insert into section
-    (id_class, id_classroom, id_start_time, id_finish_time, id_professor, id_created_by, comments)
-    values
+    `insert into section (
+      id_semester,
+      id_class,
+      id_classroom,
+      id_start_time,
+      id_finish_time,
+      id_professor,
+      id_created_by,
+      comments
+    ) values
     (?, ?, ?, ?, ?, ?, ?)`,
-    [idClass, idClassroom, idStartTime, idFinishTime, idProfessor, idCreatedBy, comments],
+    values,
     (error) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear sección' });
@@ -40,6 +55,7 @@ router.post('/days', (req, res) => {
     values.push(idSection, day);
   });
 
+  // TODO revisar si el aula entra en conflicto los dias que se ingreso con otra seccion
   // eliminar los dias que no estan marcados
   db.query('delete from section_x_schedule_day where id_section = ?', [idSection], (error) => {
     if (error) {

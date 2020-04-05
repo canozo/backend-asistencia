@@ -8,7 +8,6 @@ const router = express.Router();
 router.get('/', (req, res) => {
   db.query(
     'select id_building as idBuilding, alias from building',
-    [],
     (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al obtener edificios' });
@@ -56,12 +55,24 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
 });
 
 // route: /api/building/:idBuilding
-// TODO update
+router.put('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
+  const { idCampus, alias } = req.body;
+  db.query(
+    'update building set id_campus = ?, alias = ? where id_building = ?',
+    [idCampus, alias, req.params.idBuilding],
+    (error) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al modificar edificio' });
+      } else {
+        res.json({ status: 'success', msg: 'Edificio modificado' });
+      }
+    }
+  );
+});
 
-// route: /api/building
-router.delete('/', auth.getToken, auth.verifyAdmin, (req, res) => {
-  const { idBuilding } = req.body;
-  db.query('delete from building where id_building = ?', [idBuilding], (error) => {
+// route: /api/building/:idBuilding
+router.delete('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
+  db.query('delete from building where id_building = ?', [req.params.idBuilding], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar edificio' });
     } else {
