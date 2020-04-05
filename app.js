@@ -1,11 +1,11 @@
 require('dotenv').config();
+require('./config/startup').startup();
 
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const http = require('http');
 const cors = require('cors');
-const startup = require('./config/startup');
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +20,7 @@ app.use(cors());
 
 app.use('/api/upload', require('./api/upload'));
 app.use('/api/auth', require('./api/auth'));
+app.use('/api/semester', require('./api/semester'));
 app.use('/api/admin', require('./api/admin'));
 app.use('/api/professor', require('./api/professor'));
 app.use('/api/student', require('./api/student'));
@@ -29,8 +30,4 @@ app.use('/api/classroom', require('./api/classroom'));
 app.use('/api/class', require('./api/class'));
 app.use('/api/section', require('./api/section'));
 
-server.listen(port, () => {
-  // startup code
-  console.log(`Servidor HTTP escuchando (${port})`);
-  startup();
-});
+server.listen(port, () => console.log(`Servidor HTTP escuchando (${port})`));
