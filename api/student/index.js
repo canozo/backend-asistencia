@@ -66,12 +66,26 @@ router.post(
   '/register',
   setUserType.student,
   auth.register,
+  auth.getUser,
+  auth.signToken,
   (req, res) => {
-    res.json({ status: 'success', msg: 'Usuario de estudiante registrado' });
-  },
+    res.json({ status: 'success', token: req.token });
+  }
 );
 
-// route: /api/student/accountnum
-// TODO update account num
+// route: /api/student/:idStudent
+router.put('/:idStudent', auth.getToken, auth.verifyAdmin, (req, res) => {
+  db.query(
+    'update user set accountNumber = ? where id_user = ?',
+    [req.body.accountNumber, req.params.idStudent],
+    (error) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al modificar numero de cuenta' });
+      } else {
+        res.json({ status: 'success', msg: 'Numero de cuenta modificado' });
+      }
+    }
+  );
+});
 
 module.exports = router;

@@ -27,11 +27,11 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
     values
     (?, ?, ?)`,
     [req.data.user.idUser, campus, alias],
-    (error) => {
+    (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear campus' });
       } else {
-        res.json({ status: 'success', msg: 'Campus creado' });
+        res.json({ status: 'success', msg: 'Campus creado', id: result.insertId });
       }
     }
   );

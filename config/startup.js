@@ -6,7 +6,7 @@ const fs = require('fs');
 module.exports = {
   startup: () => {
     // check env vars
-    assert(!isNaN(process.env.BCRYPT_SALT), 'Variable de entorno BCRYPT_SALT no es un numero')
+    assert(!isNaN(process.env.BCRYPT_SALT), 'Variable de entorno BCRYPT_SALT no es un numero');
     assert(process.env.JWT_SALT, 'Variable de entorno JWT_SALT no se configuro');
     assert(process.env.ENVIRONMENT, 'Variable de entorno ENVIRONMENT no se configuro');
     assert(process.env.AWS_ACCESS_KEY_ID, 'Variable de entorno AWS_ACCESS_KEY_ID no se configuro');

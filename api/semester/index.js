@@ -25,13 +25,13 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
     `insert into semester
     (id_created_by, alias, active)
     values
-    (?, ?)`,
+    (?, ?, ?)`,
     [req.data.user.idUser, alias, active],
-    (error) => {
+    (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear semestre' });
       } else {
-        res.json({ status: 'success', msg: 'Semestre creado' });
+        res.json({ status: 'success', msg: 'Semestre creado', id: result.insertId });
       }
     }
   );

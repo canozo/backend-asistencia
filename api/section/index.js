@@ -15,6 +15,8 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
     req.body.idProfessor,
     req.data.user.idUser,
     req.body.comments,
+    req.body.idStartTime,
+    req.body.idFinishTime,
   ];
   db.query(
     `insert into section (
@@ -26,14 +28,26 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
       id_professor,
       id_created_by,
       comments
-    ) values
-    (?, ?, ?, ?, ?, ?, ?)`,
+    ) (
+      select ?, ?, ?, ?, ?, ?, ?, ?
+      where (
+        select (
+          select schedule_time
+          from schedule_time
+          where id_schedule_time = ?
+        ) < (
+          select schedule_time
+          from schedule_time
+          where id_schedule_time = ?
+        )
+      )
+    )`,
     values,
-    (error) => {
+    (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear sección' });
       } else {
-        res.json({ status: 'success', msg: 'Sección creada' });
+        res.json({ status: 'success', msg: 'Sección creada', id: result.insertId });
       }
     }
   );
@@ -56,6 +70,7 @@ router.post('/days', (req, res) => {
   });
 
   // TODO revisar si el aula entra en conflicto los dias que se ingreso con otra seccion
+
   // eliminar los dias que no estan marcados
   db.query('delete from section_x_schedule_day where id_section = ?', [idSection], (error) => {
     if (error) {

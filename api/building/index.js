@@ -44,11 +44,11 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
     values
     (?, ?, ?)`,
     [idCampus, req.data.user.idUser, alias],
-    (error) => {
+    (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear edificio' });
       } else {
-        res.json({ status: 'success', msg: 'Edificio creado' });
+        res.json({ status: 'success', msg: 'Edificio creado', id: result.insertId });
       }
     }
   );

@@ -43,11 +43,11 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
     values
     (?, ?, ?, ?)`,
     [req.data.user.idUser, className, code, comments],
-    (error) => {
+    (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear clase' });
       } else {
-        res.json({ status: 'success', msg: 'Clase creada' });
+        res.json({ status: 'success', msg: 'Clase creada', id: result.insertId });
       }
     }
   );

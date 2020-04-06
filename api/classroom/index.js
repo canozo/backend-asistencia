@@ -42,11 +42,11 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
     values
     (?, ?, ?, ?)`,
     [idBuilding, req.data.user.idUser, capacity, alias],
-    (error) => {
+    (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al crear aula' });
       } else {
-        res.json({ status: 'success', msg: 'Aula creada' });
+        res.json({ status: 'success', msg: 'Aula creada', id: result.insertId });
       }
     }
   );
