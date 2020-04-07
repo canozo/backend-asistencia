@@ -1,8 +1,93 @@
 const express = require('express');
+const pagination = require('../../middleware/pagination');
 const auth = require('../../middleware/auth');
 const db = require('../../config/db');
 
 const router = express.Router();
+
+// route: /api/section
+router.get('/', (req, res) => {
+  db.query(
+    `select
+    id_section as idSection,
+    class.code as classCode,
+    class.class as class,
+    section.comments as comments,
+    a.schedule_time as startTime,
+    b.schedule_time as finishTime,
+    classroom.alias as classroom,
+    building.alias as building,
+    concat_ws(' ', user.names, user.surnames) as professor,
+    semester.alias as semester,
+    semester.active as semesterActive
+    from section
+    inner join semester
+    on section.id_semester = semester.id_semester
+    inner join class
+    on section.id_class = class.id_class
+    inner join classroom
+    on section.id_classroom = classroom.id_classroom
+    inner join building
+    on classroom.id_building = building.id_building
+    inner join schedule_time a
+    on section.id_start_time = a.id_schedule_time
+    inner join schedule_time b
+    on section.id_start_time = b.id_schedule_time
+    inner join user
+    on section.id_professor = user.id_user`,
+    (error, result) => {
+      if (error) {
+        console.log(error);
+        res.json({ status: 'error', msg: 'Error al obtener secciones' });
+      } else {
+        res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
+      }
+    }
+  );
+});
+
+// route: /api/section
+router.get('/:from/:to', pagination, (req, res) => {
+  db.query(
+    `select
+    id_section as idSection,
+    class.code as classCode,
+    class.class as class,
+    section.comments as comments,
+    a.schedule_time as startTime,
+    b.schedule_time as finishTime,
+    classroom.alias as classroom,
+    building.alias as building,
+    concat_ws(' ', user.names, user.surnames) as professor,
+    semester.alias as semester,
+    semester.active as semesterActive
+    from section
+    inner join semester
+    on section.id_semester = semester.id_semester
+    inner join class
+    on section.id_class = class.id_class
+    inner join classroom
+    on section.id_classroom = classroom.id_classroom
+    inner join building
+    on classroom.id_building = building.id_building
+    inner join schedule_time a
+    on section.id_start_time = a.id_schedule_time
+    inner join schedule_time b
+    on section.id_start_time = b.id_schedule_time
+    inner join user
+    on section.id_professor = user.id_user
+    order by id_section
+    asc limit ?, ?`,
+    [req.params.from, req.params.to],
+    (error, result) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al obtener secciones' });
+      } else {
+        res.json({ status: 'success', msg: 'Secciones obtenidas', data: result });
+      }
+    }
+  );
+});
 
 // route: /api/section
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {

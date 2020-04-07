@@ -1,10 +1,60 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const regex = require('../config/regex');
+const pagination = require('../../middleware/pagination');
 const auth = require('../../middleware/auth');
 const db = require('../../config/db');
 
 const router = express.Router();
+
+// route: /api/user
+router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+  db.query(
+    `select
+    id_user as idUser,
+    user_type as userType,
+    email,
+    names,
+    surnames,
+    account_number as accountNumber
+    from user a
+    inner join user_type b
+    on a.id_user_type = b.id_user_type`,
+    (error, result) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al obtener usuarios' });
+      } else {
+        res.json({ status: 'success', msg: 'Usuarios obtenidos', data: result });
+      }
+    }
+  );
+});
+
+// route: /api/user/:from/:to
+router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
+  db.query(
+    `select
+    id_user as idUser,
+    user_type as userType,
+    email,
+    names,
+    surnames,
+    account_number as accountNumber
+    from user a
+    inner join user_type b
+    on a.id_user_type = b.id_user_type
+    order by id_user asc
+    limit ?, ?`,
+    [req.params.from, req.params.to],
+    (error, result) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al obtener usuarios' });
+      } else {
+        res.json({ status: 'success', msg: 'Usuarios obtenidos', data: result });
+      }
+    }
+  );
+});
 
 // route: /api/user
 router.put('/', auth.getToken, auth.verifyAny, (req, res) => {

@@ -1,3 +1,6 @@
+const min = 5;
+const max = 50;
+
 module.exports = (req, res, next) => {
   if (isNaN(req.params.from)) {
     return res.json({ status: 'error', msg: 'Parametro "from" no es un numero.' });
@@ -8,14 +11,14 @@ module.exports = (req, res, next) => {
   const from = Number(req.params.from);
   let to = Number(req.params.to);
 
-  if (to - from < 5) {
-    // trying to paginate too little, min at 5
-    to = from + 5;
+  if (to - from < min) {
+    // trying to paginate too little
+    to = from + min;
   }
 
-  if (to - from > 50) {
-    // trying to paginate too many, max at 50
-    to = from + 50;
+  if (to - from > max) {
+    // trying to paginate too many
+    to = from + max;
   }
 
   req.params.from = from;
