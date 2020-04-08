@@ -7,7 +7,11 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/user
+/**
+ * Get all users
+ * @route GET /api/user
+ * @permissions admin
+ */
 router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     `select
@@ -30,7 +34,11 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/user/:from/:to
+/**
+ * Get users paginated
+ * @route GET /api/user/:from/:to
+ * @permissions admin
+ */
 router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
   db.query(
     `select
@@ -56,7 +64,14 @@ router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res)
   );
 });
 
-// route: /api/user
+/**
+ * Update user personal info
+ * @route PUT /api/user
+ * @permissions user
+ * @body {string} names
+ * @body {string} surnames
+ * @body {string} email
+ */
 router.put('/', auth.getToken, auth.verifyAny, (req, res) => {
   const { email, names, surnames } = req.body;
 
@@ -81,7 +96,12 @@ router.put('/', auth.getToken, auth.verifyAny, (req, res) => {
   );
 });
 
-// route: /api/user/pw
+/**
+ * Update user password
+ * @route PUT /api/user/pw
+ * @permissions user
+ * @body {string} password
+ */
 router.put('/pw', auth.getToken, auth.verifyAny, (req, res) => {
   const { password } = req.body;
 
@@ -107,7 +127,11 @@ router.put('/pw', auth.getToken, auth.verifyAny, (req, res) => {
   });
 });
 
-// route: /api/user/:idUser
+/**
+ * Delete user (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/user/:idUser
+ * @permissions admin
+ */
 router.delete('/:idUser', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query('delete from user where id_user != 1 and id_user = ?', [req.params.idUser], (error) => {
     if (error) {

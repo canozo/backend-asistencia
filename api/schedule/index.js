@@ -4,7 +4,11 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/schedule
+/**
+ * Get all time schedule data
+ * @route GET /api/schedule
+ * @permissions admin
+ */
 router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     'select id_schedule_time as idScheduleTime, schedule_time as scheduleTime from schedule_time',
@@ -18,7 +22,12 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/schedule
+/**
+ * Create a new time schedule
+ * @route GET /api/schedule
+ * @permissions admin
+ * @body {string} scheduleTime
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     `insert into schedule_time
@@ -36,7 +45,12 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/schedule/:idScheduleTime
+/**
+ * Update a schedule
+ * @route PUT /api/schedule/:idScheduleTime
+ * @permissions admin
+ * @body {string} scheduleTime
+ */
 router.put('/:idScheduleTime', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { scheduleTime } = req.body;
   db.query(
@@ -52,7 +66,11 @@ router.put('/:idScheduleTime', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/schedule/:idScheduleTime
+/**
+ * Delete a schedule (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/schedule/:idScheduleTime
+ * @permissions admin
+ */
 router.delete('/:idScheduleTime', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     'delete from schedule_time where id_schedule_time = ?',

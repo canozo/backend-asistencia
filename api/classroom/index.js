@@ -4,7 +4,10 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/classroom
+/**
+ * Get list of all classrooms
+ * @route GET /api/classroom
+ */
 router.get('/', (req, res) => {
   db.query(
     'select id_classroom as idClassroom, capacity, alias from classroom',
@@ -18,7 +21,10 @@ router.get('/', (req, res) => {
   );
 });
 
-// route: /api/classroom/:idBuilding
+/**
+ * Get list of all classrooms in a specific building
+ * @route GET /api/classroom/:idBuilding
+ */
 router.get('/:idBuilding', (req, res) => {
   db.query(
     'select id_classroom as idClassroom, capacity, alias from classroom where id_building = ?',
@@ -33,7 +39,14 @@ router.get('/:idBuilding', (req, res) => {
   );
 });
 
-// route: /api/classroom
+/**
+ * Create a new classroom
+ * @route POST /api/classroom
+ * @permissions admin
+ * @body {string | number} idBuilding
+ * @body {string} capacity
+ * @body {string} alias
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idBuilding, capacity, alias } = req.body;
   db.query(
@@ -52,8 +65,15 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/classroom/:idClassroom
-router.post('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
+/**
+ * Update classroom data
+ * @route PUT /api/classroom/:idClassroom
+ * @permissions admin
+ * @body {string | number} idBuilding
+ * @body {string} capacity
+ * @body {string} alias
+ */
+router.put('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idBuilding, capacity, alias } = req.body;
   db.query(
     'update classroom set id_building = ?, capacity = ?, alias = ? where id_classroom = ?',
@@ -68,7 +88,11 @@ router.post('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/classroom/:idClassroom
+/**
+ * Delete classroom (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/classroom/:idClassroom
+ * @permissions admin
+ */
 router.delete('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query('delete from classroom where id_classroom = ?', [req.params.idClassroom], (error) => {
     if (error) {

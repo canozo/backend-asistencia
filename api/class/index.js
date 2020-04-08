@@ -5,7 +5,10 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/class
+/**
+ * Get all the classes
+ * @route GET /api/class
+ */
 router.get('/', (req, res) => {
   db.query(
     'select id_class as idClass, class, code, comments from class',
@@ -19,7 +22,10 @@ router.get('/', (req, res) => {
   );
 });
 
-// route: /api/class/:from/:to
+/**
+ * Get classes paginated
+ * @route GET /api/class/:from/:to
+ */
 router.get('/:from/:to', pagination, (req, res) => {
   db.query(
     'select id_class as idClass, class, code, comments from class order by id_class asc limit ?, ?',
@@ -34,7 +40,14 @@ router.get('/:from/:to', pagination, (req, res) => {
   );
 });
 
-// route: /api/class
+/**
+ * Create a new class
+ * @route POST /api/class
+ * @permissions admin
+ * @body {string} className
+ * @body {string} code
+ * @body {string | undefined} comments
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { className, code, comments } = req.body;
   db.query(
@@ -53,7 +66,14 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/class/:idClass
+/**
+ * Create a new class
+ * @route PUT /api/class/:idClass
+ * @permissions admin
+ * @body {string} className
+ * @body {string} code
+ * @body {string | undefined} comments
+ */
 router.put('/:idClass', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { className, code, comments } = req.body;
   db.query(
@@ -69,7 +89,11 @@ router.put('/:idClass', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/class/:idClass
+/**
+ * Delete class (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/class/:idClass
+ * @permissions admin
+ */
 router.delete('/:idClass', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query('delete from class where id_class = ?', [req.params.idClass], (error) => {
     if (error) {

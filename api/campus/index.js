@@ -4,7 +4,10 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/campus
+/**
+ * Get all the campuses
+ * @route GET /api/campus
+ */
 router.get('/', (req, res) => {
   db.query(
     'select id_campus as idCampus, campus, alias from campus',
@@ -18,7 +21,13 @@ router.get('/', (req, res) => {
   );
 });
 
-// route: /api/campus
+/**
+ * Create a new campus
+ * @route POST /api/campus
+ * @permissions admin
+ * @body {string} campus
+ * @body {string} alias
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { campus, alias } = req.body;
   db.query(
@@ -37,7 +46,13 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/campus/:idCampus
+/**
+ * Update campus data
+ * @route PUT /api/campus/:idCampus
+ * @permissions admin
+ * @body {string} campus
+ * @body {string} alias
+ */
 router.put('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { campus, alias } = req.body;
   db.query(
@@ -53,7 +68,11 @@ router.put('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/campus/:idCampus
+/**
+ * Delete campus (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/campus/:idCampus
+ * @permissions admin
+ */
 router.delete('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query('delete from campus where id_campus = ?', [req.params.idCampus], (error) => {
     if (error) {

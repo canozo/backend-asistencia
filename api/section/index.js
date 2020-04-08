@@ -5,7 +5,10 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/section
+/**
+ * Get all sections data
+ * @route GET /api/section
+ */
 router.get('/', (req, res) => {
   db.query(
     `select
@@ -46,7 +49,10 @@ router.get('/', (req, res) => {
   );
 });
 
-// route: /api/section
+/**
+ * Get all sections data paginated
+ * @route GET /api/section/:from/:to
+ */
 router.get('/:from/:to', pagination, (req, res) => {
   db.query(
     `select
@@ -89,7 +95,18 @@ router.get('/:from/:to', pagination, (req, res) => {
   );
 });
 
-// route: /api/section
+/**
+ * Create a new section
+ * @route POST /api/section
+ * @permissions admin
+* @body {string | number} idSemester
+* @body {string | number} idClass
+* @body {string | number} idClassroom
+* @body {string | number} idStartTime
+* @body {string | number} idFinishTime
+* @body {string | number} idProfessor
+* @body {string | number | undefined} comments
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   const values = [
     req.body.idSemester,
@@ -138,8 +155,14 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/section/days
-router.post('/days', (req, res) => {
+/**
+ * Set days schedule for the section
+ * @route POST /api/section/days
+ * @permissions admin
+ * @body {string | number} idSection
+ * @body {string | number} idDays
+ */
+router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idSection, idDays } = req.body;
 
   if (!Array.isArray(idDays)) {
@@ -173,8 +196,14 @@ router.post('/days', (req, res) => {
   });
 });
 
-// route: /api/section/student
-router.post('/student', (req, res) => {
+/**
+ * Add student to section
+ * @route POST /api/section/student
+ * @permissions admin
+ * @body {string | number} idSection
+ * @body {string | number} idStudent
+ */
+router.post('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idSection, idStudent } = req.body;
   db.query(
     'insert into section_x_student (id_section, id_student) values (?, ?)',
@@ -189,8 +218,14 @@ router.post('/student', (req, res) => {
   );
 });
 
-// route: /api/section/student
-router.delete('/student', (req, res) => {
+/**
+ * Remove student from section
+ * @route DELETE /api/section/student
+ * @permissions admin
+ * @body {string | number} idSection
+ * @body {string | number} idStudent
+ */
+router.delete('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idSection, idStudent } = req.body;
   db.query(
     'delete from section_x_student where id_section = ? and id_student = ?',
@@ -200,6 +235,25 @@ router.delete('/student', (req, res) => {
         res.json({ status: 'error', msg: 'Error al quitar estudiante de sección' });
       } else {
         res.json({ status: 'success', msg: 'Estudiante removido de sección' });
+      }
+    }
+  );
+});
+
+/**
+ * Delete section (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/section/:idSection
+ * @permissions admin
+ */
+router.delete('/:idSection', auth.getToken, auth.verifyAdmin, (req, res) => {
+  db.query(
+    'delete from section where id_section = ?',
+    [req.params.idSection],
+    (error) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al eliminar sección' });
+      } else {
+        res.json({ status: 'success', msg: 'Sección eliminada' });
       }
     }
   );

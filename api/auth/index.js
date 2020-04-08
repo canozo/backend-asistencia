@@ -4,12 +4,25 @@ const setUserType = require('../../middleware/setUserType');
 
 const router = express.Router();
 
-// route: /api/auth/login
+/**
+ * Login with any user type
+ * @route POST /api/auth/login
+ * @body {string} email
+ * @body {string} password
+ */
 router.post('/login', auth.getUser, auth.signToken, (req, res) => {
   res.json({ status: 'success', token: req.token });
 });
 
-// route: /api/auth/register
+/**
+ * Self register a student
+ * @route POST /api/auth/register
+ * @body {string} names
+ * @body {string} surnames
+ * @body {string} email
+ * @body {string} password
+ * @body {string | undefined} accountNumber
+ */
 router.post(
   '/register',
   setUserType.student,
@@ -21,7 +34,10 @@ router.post(
   }
 );
 
-// route: /api/auth/verify
+/**
+ * Check if jsonwebtoken is still valid
+ * @route POST /api/auth/verify
+ */
 router.post('/verify', auth.getToken, auth.verifyAny, (req, res) => {
   res.json({ status: 'success', user: req.data.user });
 });

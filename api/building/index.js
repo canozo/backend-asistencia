@@ -4,7 +4,10 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/building
+/**
+ * Get all buildings
+ * @route GET /api/building
+ */
 router.get('/', (req, res) => {
   db.query(
     'select id_building as idBuilding, alias from building',
@@ -18,7 +21,10 @@ router.get('/', (req, res) => {
   );
 });
 
-// route: /api/building/:idCampus
+/**
+ * Get all buildings in a specific campus
+ * @route GET /api/building/:idCampus
+ */
 router.get('/:idCampus', (req, res) => {
   db.query(
     `select id_building as idBuilding, alias
@@ -35,7 +41,13 @@ router.get('/:idCampus', (req, res) => {
   );
 });
 
-// route: /api/building
+/**
+ * Create a new building
+ * @route POST /api/building
+ * @permissions admin
+ * @body {string | number} idCampus
+ * @body {string} alias
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idCampus, alias } = req.body;
   db.query(
@@ -54,7 +66,13 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/building/:idBuilding
+/**
+ * Update building
+ * @route PUT /api/building/:idBuilding
+ * @permissions admin
+ * @body {string | number} idCampus
+ * @body {string} alias
+ */
 router.put('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idCampus, alias } = req.body;
   db.query(
@@ -70,7 +88,11 @@ router.put('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/building/:idBuilding
+/**
+ * Delet building (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/building/:idBuilding
+ * @permissions admin
+ */
 router.delete('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query('delete from building where id_building = ?', [req.params.idBuilding], (error) => {
     if (error) {

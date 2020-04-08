@@ -4,7 +4,11 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/semester
+/**
+ * Get all semesters
+ * @route GET /api/semester
+ * @permissions admin
+ */
 router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     'select id_semester as idSemester, alias, active from semester',
@@ -18,7 +22,13 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/semester
+/**
+ * Create a new semester
+ * @route POST /api/semester
+ * @permissions admin
+ * @body {string} alias
+ * @body {boolean} active
+ */
 router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { alias, active } = req.body;
   db.query(
@@ -37,7 +47,13 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/semester/:idSemester
+/**
+ * Update semester data
+ * @route PUT /api/semester/:idSemester
+ * @permissions admin
+ * @body {string} alias
+ * @body {boolean} active
+ */
 router.put('/:idSemester', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { alias, active } = req.body;
   db.query(
@@ -53,7 +69,11 @@ router.put('/:idSemester', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/semester/:idSemester
+/**
+ * Delete semester (if it's not referenced anywhere else in the db)
+ * @route DELETE /api/semester/:idSemester
+ * @permissions admin
+ */
 router.delete('/:idSemester', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query('delete from semester where id_semester = ?', [req.params.idSemester], (error) => {
     if (error) {

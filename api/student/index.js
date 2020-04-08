@@ -6,6 +6,7 @@ const AWS = require('aws-sdk');
 const auth = require('../../middleware/auth');
 const pagination = require('../../middleware/pagination');
 const setUserType = require('../../middleware/setUserType');
+const regex = require('../../config/regex');
 const db = require('../../config/db');
 
 const router = express.Router();
@@ -35,7 +36,11 @@ const upload = multer({
   },
 });
 
-// route: /api/student
+/**
+ * Get all students
+ * @route GET /api/student
+ * @permissions admin
+ */
 router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     `select
@@ -55,7 +60,11 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/student/:from/:to
+/**
+ * Get students paginated
+ * @route GET /api/student/:from/:to
+ * @permissions admin
+ */
 router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
   db.query(
     `select
@@ -78,7 +87,16 @@ router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res)
   );
 });
 
-// route: /api/student
+/**
+ * Create a new student registered by admin
+ * @route POST /api/student
+ * @permissions admin
+ * @body {string} names
+ * @body {string} surnames
+ * @body {string} email
+ * @body {string} password
+ * @body {string | undefined} accountNumber
+ */
 router.post(
   '/',
   auth.getToken,
@@ -90,7 +108,15 @@ router.post(
   },
 );
 
-// route: /api/student/register
+/**
+ * Self register a student
+ * @route POST /api/student/register
+ * @body {string} names
+ * @body {string} surnames
+ * @body {string} email
+ * @body {string} password
+ * @body {string | undefined} accountNumber
+ */
 router.post(
   '/register',
   setUserType.student,
@@ -102,8 +128,16 @@ router.post(
   }
 );
 
-// route: /api/student/:idStudent
+/**
+ * Update student account number
+ * @route PUT /api/student/:idStudent
+ * @permissions admin
+ * @body {string} accountNumber
+ */
 router.put('/:idStudent', auth.getToken, auth.verifyAdmin, (req, res) => {
+  if (!regex.accountNum.test(req.body.accountNumber)) {
+    return res.json({ status: 'error', msg: 'Numero de cuenta no valido' });
+  }
   db.query(
     'update user set accountNumber = ? where id_user = ?',
     [req.body.accountNumber, req.params.idStudent],
@@ -117,7 +151,11 @@ router.put('/:idStudent', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/student/upload
+/**
+ * Upload student face image to S3
+ * @route POST /api/student/upload
+ * @permissions student
+ */
 router.post('/upload', auth.getToken, auth.verifyStudent, upload.single('face'), (req, res) => {
   db.query(
     'select account_number as accountNumber from user where id_user = ?',

@@ -6,7 +6,11 @@ const db = require('../../config/db');
 
 const router = express.Router();
 
-// route: /api/professor
+/**
+ * Get all professors
+ * @route GET /api/professor
+ * @permissions admin
+ */
 router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   db.query(
     `select
@@ -26,7 +30,11 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
   );
 });
 
-// route: /api/professor/:from/:to
+/**
+ * Get professors paginated
+ * @route GET /api/professor/:from/:to
+ * @permissions admin
+ */
 router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
   db.query(
     `select
@@ -49,7 +57,16 @@ router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res)
   );
 });
 
-// route: /api/professor
+/**
+ * Create a new professor user
+ * @route POST /api/professor
+ * @permissions admin
+ * @body {string} names
+ * @body {string} surnames
+ * @body {string} email
+ * @body {string} password
+ * @body {string | undefined} accountNumber
+ */
 router.post(
   '/',
   auth.getToken,

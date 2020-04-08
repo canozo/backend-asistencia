@@ -4,7 +4,11 @@ const setUserType = require('../../middleware/setUserType');
 
 const router = express.Router();
 
-// route: /api/admin
+/**
+ * Create new admin user
+ * @route POST /api/admin
+ * @permissions admin
+ */
 router.post(
   '/',
   auth.getToken,
