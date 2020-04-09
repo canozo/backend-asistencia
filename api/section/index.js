@@ -35,7 +35,7 @@ router.get('/', (req, res) => {
     inner join schedule_time a
     on section.id_start_time = a.id_schedule_time
     inner join schedule_time b
-    on section.id_start_time = b.id_schedule_time
+    on section.id_finish_time = b.id_schedule_time
     inner join user
     on section.id_professor = user.id_user`,
     (error, result) => {
@@ -79,7 +79,7 @@ router.get('/:from/:to', pagination, (req, res) => {
     inner join schedule_time a
     on section.id_start_time = a.id_schedule_time
     inner join schedule_time b
-    on section.id_start_time = b.id_schedule_time
+    on section.id_finish_time = b.id_schedule_time
     inner join user
     on section.id_professor = user.id_user
     order by id_section
@@ -160,39 +160,111 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route POST /api/section/days
  * @permissions admin
  * @body {string | number} idSection
- * @body {string | number} idDays
+ * @body {string[] | number[]} idDays
  */
 router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idSection, idDays } = req.body;
 
   if (!Array.isArray(idDays)) {
-    return res.json({ status: 'error', msg: 'Error al agregar dia de semana a la sección' });
+    return res.json({ status: 'error', msg: 'Error, campo "idDays" no es un arreglo' });
   }
 
-  let query = 'insert into section_x_schedule_day (id_section, id_schedule_day) values';
+  let query = 'insert into section_x_schedule_day (id_section, id_schedule_day) values ';
   const values = [];
 
+  let daysQuery =
+    `select count(section.id_section) > 0 as conflict
+    from section
+    inner join semester
+    on section.id_semester = semester.id_semester
+    inner join section_x_schedule_day
+    on section.id_section = section_x_schedule_day.id_section
+    where semester.active = true and section.id_section != ? and id_classroom = (
+      select id_classroom from section where id_section = ?
+    ) and id_start_time = (
+      select id_start_time from section where id_section = ?
+    ) and (`;
+  const daysValues = [idSection, idSection, idSection];
+
+  let profQuery =
+    `select count(section.id_section) > 0 as conflict
+    from section
+    inner join semester
+    on section.id_semester = semester.id_semester
+    inner join section_x_schedule_day
+    on section.id_section = section_x_schedule_day.id_section
+    where semester.active = true and section.id_section != ? and id_professor = (
+      select id_professor from section where id_section = ?
+    ) and id_start_time = (
+      select id_start_time from section where id_section = ?
+    ) and (`;
+  const profValues = [idSection, idSection, idSection];
+
   idDays.forEach(day => {
-    query += '(?, ?),';
+    // days check
+    daysQuery += 'id_schedule_day = ? or ';
+    daysValues.push(day);
+
+    // professor check
+    profQuery += 'id_schedule_day = ? or ';
+    profValues.push(day);
+
+    // main query
+    query += '(?, ?), ';
     values.push(idSection, day);
   });
 
-  // TODO revisar si el aula entra en conflicto los dias que se ingreso con otra seccion
+  if (idDays.length === 0) {
+    daysQuery += 'false)';
+    profQuery += 'false)';
+  } else {
+    daysQuery = daysQuery.substr(0, daysQuery.length - 4) + ')'
+    profQuery = profQuery.substr(0, profQuery.length - 4) + ')'
+  }
 
-  // eliminar los dias que no estan marcados
-  db.query('delete from section_x_schedule_day where id_section = ?', [idSection], (error) => {
+  db.query(daysQuery, daysValues, (error, result) => {
     if (error) {
-      res.json({ status: 'error', msg: 'Error al actualizar dias de semana a la sección' });
-    } else {
-      // agregar los dias que si marco
-      db.query(query.substr(0, query.length - 1), values, (error) => {
-        if (error) {
-          res.json({ status: 'error', msg: 'Error al agregar dias de semana a la sección' });
-        } else {
-          res.json({ status: 'success', msg: 'Dias de semana de sección agregados' });
-        }
+      return res.json({
+        status: 'error',
+        msg: 'Error al revisar si hay conflicto en días de sección',
+      });
+    } else if (result[0].conflict) {
+      return res.json({
+        status: 'error',
+        msg: 'Esta sección entra en conflicto con otra en la misma aula',
       });
     }
+
+    db.query(profQuery, profValues, (error, result) => {
+      if (error) {
+        return res.json({
+          status: 'error',
+          msg: 'Error al revisar si hay conflicto en horario del profesor de sección',
+        });
+      } else if (result[0].conflict) {
+        return res.json({
+          status: 'error',
+          msg: 'Este profesor ya da clases a esta misma hora',
+        });
+      }
+
+      // eliminar los días que no estan marcados
+      db.query('delete from section_x_schedule_day where id_section = ?', [idSection], (error) => {
+        if (error) {
+          res.json({ status: 'error', msg: 'Error al actualizar días de semana a la sección' });
+        } else {
+          // agregar los días que si marco
+          db.query(query.substr(0, query.length - 2), values, (error) => {
+            if (error && values.length > 0) {
+              console.log(error);
+              res.json({ status: 'error', msg: 'Error al agregar días de semana a la sección' });
+            } else {
+              res.json({ status: 'success', msg: 'Dias de semana de sección modificados' });
+            }
+          });
+        }
+      });
+    });
   });
 });
 
