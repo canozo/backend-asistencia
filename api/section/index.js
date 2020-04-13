@@ -173,36 +173,79 @@ router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
   const values = [];
 
   let daysQuery =
-    `select count(section.id_section) > 0 as conflict
-    from section
-    inner join semester
-    on section.id_semester = semester.id_semester
-    inner join section_x_schedule_day
-    on section.id_section = section_x_schedule_day.id_section
-    where semester.active = true and section.id_section != ? and id_classroom = (
-      select id_classroom from section where id_section = ?
-    ) and id_start_time = (
-      select id_start_time from section where id_section = ?
-    ) and (`;
-  const daysValues = [idSection, idSection, idSection];
+    `select count(*) as conflict from (
+      select
+      a.schedule_time as start_time,
+      b.schedule_time as finish_time,
+      id_semester,
+      id_schedule_day,
+      id_classroom,
+      section.id_section as id_section
+      from section
+      inner join schedule_time a
+      on id_start_time = a.id_schedule_time
+      inner join schedule_time b
+      on id_finish_time = b.id_schedule_time
+      inner join section_x_schedule_day
+      on section.id_section = section_x_schedule_day.id_section
+      where section.id_section = ?
+    ) a
+    inner join (
+      select
+      a.schedule_time as start_time,
+      b.schedule_time as finish_time,
+      id_semester,
+      id_schedule_day,
+      id_classroom,
+      section.id_section as id_section
+      from section
+      inner join schedule_time a
+      on id_start_time = a.id_schedule_time
+      inner join schedule_time b
+      on id_finish_time = b.id_schedule_time
+      inner join section_x_schedule_day
+      on section.id_section = section_x_schedule_day.id_section
+    ) b
+    on
+      a.id_schedule_day = b.id_schedule_day
+      and a.id_semester = b.id_semester
+      and a.id_classroom = b.id_classroom
+    where a.id_section != b.id_section
+    and a.start_time < b.finish_time and b.start_time < a.finish_time
+    and (`;
+  const daysValues = [idSection];
 
   let profQuery =
-    `select count(section.id_section) > 0 as conflict
-    from section
-    inner join semester
-    on section.id_semester = semester.id_semester
+    `select count(*) as conflict from section
+    inner join schedule_time a
+    on id_start_time = a.id_schedule_time
+    inner join schedule_time b
+    on id_finish_time = b.id_schedule_time
     inner join section_x_schedule_day
     on section.id_section = section_x_schedule_day.id_section
-    where semester.active = true and section.id_section != ? and id_professor = (
-      select id_professor from section where id_section = ?
-    ) and id_start_time = (
-      select id_start_time from section where id_section = ?
-    ) and (`;
-  const profValues = [idSection, idSection, idSection];
+    where id_professor = (select id_professor from section where id_section = ?)
+    and section.id_section != ?
+    and a.schedule_time < (
+      select
+      schedule_time
+      from section
+      inner join schedule_time
+      on id_finish_time = schedule_time.id_schedule_time
+      where section.id_section = ?
+    ) and (
+      select
+      schedule_time
+      from section
+      inner join schedule_time
+      on id_start_time = schedule_time.id_schedule_time
+      where section.id_section = ?
+    ) < b.schedule_time
+    and (`;
+  const profValues = [idSection, idSection, idSection, idSection];
 
   idDays.forEach(day => {
     // days check
-    daysQuery += 'id_schedule_day = ? or ';
+    daysQuery += 'a.id_schedule_day = ? or ';
     daysValues.push(day);
 
     // professor check
@@ -221,48 +264,59 @@ router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
     daysQuery = daysQuery.substr(0, daysQuery.length - 4) + ')'
     profQuery = profQuery.substr(0, profQuery.length - 4) + ')'
   }
+  query = query.substr(0, query.length - 2);
 
-  db.query(daysQuery, daysValues, (error, result) => {
+  const countStudents = 'select count(*) as conflict from section_x_student where id_section = ?';
+  db.query(countStudents, [idSection], (error, result) => {
     if (error) {
-      return res.json({
-        status: 'error',
-        msg: 'Error al revisar si hay conflicto en días de sección',
-      });
+      return res.json({ status: 'error', msg: 'Error al verificar estudiantes de sección' });
     } else if (result[0].conflict) {
-      return res.json({
-        status: 'error',
-        msg: 'Esta sección entra en conflicto con otra en la misma aula',
-      });
+      return res.json({ status: 'error', msg: 'Error, sección ya tiene estudiantes matriculados' });
     }
 
-    db.query(profQuery, profValues, (error, result) => {
+    db.query(daysQuery, daysValues, (error, result) => {
       if (error) {
         return res.json({
           status: 'error',
-          msg: 'Error al revisar si hay conflicto en horario del profesor de sección',
+          msg: 'Error al revisar si hay conflicto en días de sección',
         });
       } else if (result[0].conflict) {
         return res.json({
           status: 'error',
-          msg: 'Este profesor ya da clases a esta misma hora',
+          msg: 'Esta sección entra en conflicto con otra en la misma aula',
         });
       }
 
-      // eliminar los días que no estan marcados
-      db.query('delete from section_x_schedule_day where id_section = ?', [idSection], (error) => {
+      db.query(profQuery, profValues, (error, result) => {
         if (error) {
-          res.json({ status: 'error', msg: 'Error al actualizar días de semana a la sección' });
-        } else {
-          // agregar los días que si marco
-          db.query(query.substr(0, query.length - 2), values, (error) => {
-            if (error && values.length > 0) {
-              console.log(error);
-              res.json({ status: 'error', msg: 'Error al agregar días de semana a la sección' });
-            } else {
-              res.json({ status: 'success', msg: 'Dias de semana de sección modificados' });
-            }
+          return res.json({
+            status: 'error',
+            msg: 'Error al revisar si hay conflicto en horario del profesor de sección',
+          });
+        } else if (result[0].conflict) {
+          return res.json({
+            status: 'error',
+            msg: 'Este profesor ya da clases a esta misma hora',
           });
         }
+
+        // eliminar los días que no estan marcados
+        const deleteDays = 'delete from section_x_schedule_day where id_section = ?';
+        db.query(deleteDays, [idSection], (error) => {
+          if (error) {
+            res.json({ status: 'error', msg: 'Error al actualizar días de semana a la sección' });
+          } else {
+            // agregar los días que si marco
+            db.query(query, values, (error) => {
+              if (error && values.length > 0) {
+                console.log(error);
+                res.json({ status: 'error', msg: 'Error al agregar días de semana a la sección' });
+              } else {
+                res.json({ status: 'success', msg: 'Dias de semana de sección modificados' });
+              }
+            });
+          }
+        });
       });
     });
   });
@@ -278,14 +332,79 @@ router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
 router.post('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
   const { idSection, idStudent } = req.body;
   db.query(
-    'insert into section_x_student (id_section, id_student) values (?, ?)',
-    [idSection, idStudent],
-    (error) => {
+    `select user.id_user_type = 3 as isStudent
+    from user
+    inner join user_type
+    on user.id_user_type = user_type.id_user_type
+    where id_user = ?`,
+    [idStudent],
+    (error, result) => {
       if (error) {
-        res.json({ status: 'error', msg: 'Error al agregar estudiante' });
-      } else {
-        res.json({ status: 'success', msg: 'Estudiante agregado a sección' });
+        return res.json({ status: 'error', msg: 'Error al verificar que usuario es estudiante' });
+      } else if (!result[0].isStudent) {
+        return res.json({ status: 'error', msg: 'Error, usuario no es un estudiante' });
       }
+
+      db.query(
+        `select count(*) as conflict
+        from (
+          select
+          a.schedule_time as start_time,
+          b.schedule_time as finish_time,
+          id_semester,
+          id_schedule_day
+          from section
+          inner join schedule_time a
+          on id_start_time = a.id_schedule_time
+          inner join schedule_time b
+          on id_finish_time = b.id_schedule_time
+          inner join section_x_schedule_day
+          on section.id_section = section_x_schedule_day.id_section
+          where section.id_section = ?
+        ) a
+        inner join (
+          select
+          a.schedule_time as start_time,
+          b.schedule_time as finish_time,
+          id_semester,
+          id_schedule_day
+          from section_x_student
+          inner join section
+          on section_x_student.id_section = section.id_section
+          inner join schedule_time a
+          on section.id_start_time = a.id_schedule_time
+          inner join schedule_time b
+          on section.id_finish_time = b.id_schedule_time
+          inner join section_x_schedule_day
+          on section.id_section = section_x_schedule_day.id_section
+          where id_student = ?
+        ) b
+        on a.id_semester = b.id_semester and a.id_schedule_day = b.id_schedule_day
+        where a.start_time < b.finish_time and b.start_time < a.finish_time`,
+        [idSection, idStudent],
+        (error, result) => {
+          if (error) {
+            return res.json({ status: 'error', msg: 'Error al verificar horario del estudiante' });
+          } else if (result[0].conflict) {
+            return res.json({
+              status: 'error',
+              msg: 'Error, el estudiante ya lleva clases a esa hora'
+            });
+          }
+
+          db.query(
+            'insert into section_x_student (id_section, id_student) values (?, ?)',
+            [idSection, idStudent],
+            (error) => {
+              if (error) {
+                res.json({ status: 'error', msg: 'Error al agregar estudiante' });
+              } else {
+                res.json({ status: 'success', msg: 'Estudiante agregado a sección' });
+              }
+            }
+          );
+        }
+      );
     }
   );
 });

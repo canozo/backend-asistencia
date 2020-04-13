@@ -22,7 +22,9 @@ auth.getToken = (req, res, next) => {
 };
 
 auth.signToken = (req, res, next) => {
-  jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' }, (err, token) => {
+  // TODO:
+  // jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' }, (err, token) => {
+  jwt.sign({ user: req.user }, process.env.JWT_SALT, (err, token) => {
     if (err) {
       res.json({ status: 'error', msg: 'Error jsonwebtoken' });
     } else {
