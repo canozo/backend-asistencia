@@ -107,7 +107,7 @@ router.get('/:from/:to', pagination, (req, res) => {
 * @body {string | number} idProfessor
 * @body {string | number | undefined} comments
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const values = [
     req.body.idSemester,
     req.body.idClass,
@@ -162,7 +162,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string | number} idSection
  * @body {string[] | number[]} idDays
  */
-router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
   const { idSection, idDays } = req.body;
 
   if (!Array.isArray(idDays)) {
@@ -323,13 +323,43 @@ router.post('/days', auth.getToken, auth.verifyAdmin, (req, res) => {
 });
 
 /**
+ * Get all students from a section
+ * @route GET /api/section/:idSection/students
+ * @permissions professor
+ * @permissions admin
+ */
+router.get('/:idSection/students', auth.getToken, auth.verify(1, 2), (req, res) => {
+  const { idSection } = req.params;
+  db.query(
+    `select
+    id_student as idStudent,
+    names,
+    surnames,
+    email,
+    account_number as accountNumber
+    from section_x_student
+    inner join user
+    on id_student = id_user
+    where id_section = ?`,
+    [idSection, idStudent],
+    (error, result) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al obtener estudiantes de sección' });
+      } else {
+        res.json({ status: 'success', msg: 'Estudiantes de sección obtenidos', data: result });
+      }
+    }
+  );
+});
+
+/**
  * Add student to section
  * @route POST /api/section/student
  * @permissions admin
  * @body {string | number} idSection
  * @body {string | number} idStudent
  */
-router.post('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/student', auth.getToken, auth.verify(1), (req, res) => {
   const { idSection, idStudent } = req.body;
   db.query(
     `select user.id_user_type = 3 as isStudent
@@ -416,7 +446,7 @@ router.post('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string | number} idSection
  * @body {string | number} idStudent
  */
-router.delete('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/student', auth.getToken, auth.verify(1), (req, res) => {
   const { idSection, idStudent } = req.body;
   db.query(
     'delete from section_x_student where id_section = ? and id_student = ?',
@@ -436,7 +466,7 @@ router.delete('/student', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/section/:idSection
  * @permissions admin
  */
-router.delete('/:idSection', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idSection', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     'delete from section where id_section = ?',
     [req.params.idSection],

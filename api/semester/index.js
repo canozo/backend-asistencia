@@ -9,7 +9,7 @@ const router = express.Router();
  * @route GET /api/semester
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.get('/', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     'select id_semester as idSemester, alias, active from semester',
     (error, result) => {
@@ -29,7 +29,7 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string} alias
  * @body {boolean} active
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const { alias, active } = req.body;
   db.query(
     `insert into semester
@@ -54,7 +54,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string} alias
  * @body {boolean} active
  */
-router.put('/:idSemester', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idSemester', auth.getToken, auth.verify(1), (req, res) => {
   const { alias, active } = req.body;
   db.query(
     'update semester set alias = ?, active = ? where id_semester = ?',
@@ -74,7 +74,7 @@ router.put('/:idSemester', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/semester/:idSemester
  * @permissions admin
  */
-router.delete('/:idSemester', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idSemester', auth.getToken, auth.verify(1), (req, res) => {
   db.query('delete from semester where id_semester = ?', [req.params.idSemester], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar semestre' });

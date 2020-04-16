@@ -47,7 +47,7 @@ router.get('/:idBuilding', (req, res) => {
  * @body {string} capacity
  * @body {string} alias
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const { idBuilding, capacity, alias } = req.body;
   db.query(
     `insert into classroom
@@ -73,7 +73,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string} capacity
  * @body {string} alias
  */
-router.put('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idClassroom', auth.getToken, auth.verify(1), (req, res) => {
   const { idBuilding, capacity, alias } = req.body;
   db.query(
     'update classroom set id_building = ?, capacity = ?, alias = ? where id_classroom = ?',
@@ -93,7 +93,7 @@ router.put('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/classroom/:idClassroom
  * @permissions admin
  */
-router.delete('/:idClassroom', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idClassroom', auth.getToken, auth.verify(1), (req, res) => {
   db.query('delete from classroom where id_classroom = ?', [req.params.idClassroom], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar aula' });

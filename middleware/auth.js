@@ -34,62 +34,25 @@ auth.signToken = (req, res, next) => {
   });
 };
 
+auth.verify = (...permisions) => {
+  return (req, res, next) => {
+    jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
+      if (err) {
+        res.json({ status: 'error', msg: 'Token de verificacion no valido' });
+      } else if (!permisions.includes(data.user.idUserType)) {
+        res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
+      } else {
+        req.data = data;
+        next();
+      }
+    });
+  }
+};
+
 auth.verifyAny = (req, res, next) => {
   jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
     if (err) {
       res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-    } else {
-      req.data = data;
-      next();
-    }
-  });
-};
-
-auth.verifyAdmin = (req, res, next) => {
-  jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
-    if (err) {
-      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-    } else if (data.user.idUserType !== 1) {
-      res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
-    } else {
-      req.data = data;
-      next();
-    }
-  });
-};
-
-auth.verifyProfessor = (req, res, next) => {
-  jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
-    if (err) {
-      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-    } else if (data.user.idUserType !== 2) {
-      res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
-    } else {
-      req.data = data;
-      next();
-    }
-  });
-};
-
-auth.verifyProfOrCamera = (req, res, next) => {
-  jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
-    if (err) {
-      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-    } else if (data.user.idUserType !== 2 && data.user.idUserType !== 4) {
-      res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
-    } else {
-      req.data = data;
-      next();
-    }
-  });
-};
-
-auth.verifyStudent = (req, res, next) => {
-  jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
-    if (err) {
-      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-    } else if (data.user.idUserType !== 3) {
-      res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
     } else {
       req.data = data;
       next();

@@ -12,7 +12,7 @@ const router = express.Router();
  * @route GET /api/user
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.get('/', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     `select
     id_user as idUser,
@@ -39,7 +39,7 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route GET /api/user/:from/:to
  * @permissions admin
  */
-router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
+router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) => {
   db.query(
     `select
     id_user as idUser,
@@ -132,7 +132,7 @@ router.put('/pw', auth.getToken, auth.verifyAny, (req, res) => {
  * @route DELETE /api/user/:idUser
  * @permissions admin
  */
-router.delete('/:idUser', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idUser', auth.getToken, auth.verify(1), (req, res) => {
   db.query('delete from user where id_user != 1 and id_user = ?', [req.params.idUser], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar usuario' });

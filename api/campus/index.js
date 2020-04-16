@@ -28,7 +28,7 @@ router.get('/', (req, res) => {
  * @body {string} campus
  * @body {string} alias
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const { campus, alias } = req.body;
   db.query(
     `insert into campus
@@ -53,7 +53,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string} campus
  * @body {string} alias
  */
-router.put('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idCampus', auth.getToken, auth.verify(1), (req, res) => {
   const { campus, alias } = req.body;
   db.query(
     'update campus set campus = ?, alias = ? where id_campus = ?',
@@ -73,7 +73,7 @@ router.put('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/campus/:idCampus
  * @permissions admin
  */
-router.delete('/:idCampus', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idCampus', auth.getToken, auth.verify(1), (req, res) => {
   db.query('delete from campus where id_campus = ?', [req.params.idCampus], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar campus' });

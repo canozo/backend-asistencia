@@ -48,7 +48,7 @@ router.get('/:from/:to', pagination, (req, res) => {
  * @body {string} code
  * @body {string | undefined} comments
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const { className, code, comments } = req.body;
   db.query(
     `insert into class
@@ -74,7 +74,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string} code
  * @body {string | undefined} comments
  */
-router.put('/:idClass', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idClass', auth.getToken, auth.verify(1), (req, res) => {
   const { className, code, comments } = req.body;
   db.query(
     'update class set class = ?, code = ?, comments = ? where id_class = ?',
@@ -94,7 +94,7 @@ router.put('/:idClass', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/class/:idClass
  * @permissions admin
  */
-router.delete('/:idClass', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idClass', auth.getToken, auth.verify(1), (req, res) => {
   db.query('delete from class where id_class = ?', [req.params.idClass], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar clase' });

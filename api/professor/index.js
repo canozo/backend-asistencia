@@ -11,7 +11,7 @@ const router = express.Router();
  * @route GET /api/professor
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.get('/', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     `select
     id_user as idUser,
@@ -35,7 +35,7 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route GET /api/professor/:from/:to
  * @permissions admin
  */
-router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
+router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) => {
   db.query(
     `select
     id_user as idUser,
@@ -70,7 +70,7 @@ router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res)
 router.post(
   '/',
   auth.getToken,
-  auth.verifyAdmin,
+  auth.verify(1),
   setUserType.professor,
   auth.register,
   (req, res) => {

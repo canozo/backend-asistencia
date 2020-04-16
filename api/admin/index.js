@@ -12,7 +12,7 @@ const router = express.Router();
 router.post(
   '/',
   auth.getToken,
-  auth.verifyAdmin,
+  auth.verify(1),
   setUserType.admin,
   auth.register,
   (req, res) => {

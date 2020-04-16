@@ -48,7 +48,7 @@ router.get('/:idCampus', (req, res) => {
  * @body {string | number} idCampus
  * @body {string} alias
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const { idCampus, alias } = req.body;
   db.query(
     `insert into building
@@ -73,7 +73,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @body {string | number} idCampus
  * @body {string} alias
  */
-router.put('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idBuilding', auth.getToken, auth.verify(1), (req, res) => {
   const { idCampus, alias } = req.body;
   db.query(
     'update building set id_campus = ?, alias = ? where id_building = ?',
@@ -93,7 +93,7 @@ router.put('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/building/:idBuilding
  * @permissions admin
  */
-router.delete('/:idBuilding', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idBuilding', auth.getToken, auth.verify(1), (req, res) => {
   db.query('delete from building where id_building = ?', [req.params.idBuilding], (error) => {
     if (error) {
       res.json({ status: 'error', msg: 'Error al eliminar edificio' });

@@ -41,7 +41,7 @@ const upload = multer({
  * @route GET /api/student
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.get('/', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     `select
     id_user as idUser,
@@ -65,7 +65,7 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route GET /api/student/:from/:to
  * @permissions admin
  */
-router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res) => {
+router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) => {
   db.query(
     `select
     id_user as idUser,
@@ -100,7 +100,7 @@ router.get('/:from/:to', auth.getToken, auth.verifyAdmin, pagination, (req, res)
 router.post(
   '/',
   auth.getToken,
-  auth.verifyAdmin,
+  auth.verify(1),
   setUserType.student,
   auth.register,
   (req, res) => {
@@ -134,7 +134,7 @@ router.post(
  * @permissions admin
  * @body {string} accountNumber
  */
-router.put('/:idStudent', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idStudent', auth.getToken, auth.verify(1), (req, res) => {
   if (!regex.accountNum.test(req.body.accountNumber)) {
     return res.json({ status: 'error', msg: 'Numero de cuenta no valido' });
   }
@@ -156,7 +156,7 @@ router.put('/:idStudent', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route POST /api/student/upload
  * @permissions student
  */
-router.post('/upload', auth.getToken, auth.verifyStudent, upload.single('face'), (req, res) => {
+router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), (req, res) => {
   db.query(
     'select account_number as accountNumber from user where id_user = ?',
     [req.data.user.idUser],

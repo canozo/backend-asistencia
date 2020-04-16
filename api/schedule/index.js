@@ -9,7 +9,7 @@ const router = express.Router();
  * @route GET /api/schedule
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.get('/', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     'select id_schedule_time as idScheduleTime, schedule_time as scheduleTime from schedule_time',
     (error, result) => {
@@ -28,7 +28,7 @@ router.get('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @permissions admin
  * @body {string} scheduleTime
  */
-router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     `insert into schedule_time
     (schedule_time)
@@ -51,7 +51,7 @@ router.post('/', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @permissions admin
  * @body {string} scheduleTime
  */
-router.put('/:idScheduleTime', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.put('/:idScheduleTime', auth.getToken, auth.verify(1), (req, res) => {
   const { scheduleTime } = req.body;
   db.query(
     'update schedule_time set schedule_time = ? where id_schedule_time = ?',
@@ -71,7 +71,7 @@ router.put('/:idScheduleTime', auth.getToken, auth.verifyAdmin, (req, res) => {
  * @route DELETE /api/schedule/:idScheduleTime
  * @permissions admin
  */
-router.delete('/:idScheduleTime', auth.getToken, auth.verifyAdmin, (req, res) => {
+router.delete('/:idScheduleTime', auth.getToken, auth.verify(1), (req, res) => {
   db.query(
     'delete from schedule_time where id_schedule_time = ?',
     [req.params.idScheduleTime],
