@@ -219,9 +219,11 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `attendance_x_student` (
   `id_attendance_log` INT NOT NULL,
   `id_student` INT NOT NULL,
+  `id_marked_by` INT NOT NULL,
   `marked_at` DATETIME(0) NOT NULL COMMENT 'Hora en la que se marco al estudiante, ej: 18:35',
   PRIMARY KEY (`id_attendance_log`, `id_student`),
   INDEX `fk_attendance_x_student_users1_idx` (`id_student` ASC),
+  INDEX `fk_attendance_x_student_user1_idx` (`id_marked_by` ASC),
   CONSTRAINT `fk_attendance_x_student_attendance_log1`
     FOREIGN KEY (`id_attendance_log`)
     REFERENCES `attendance_log` (`id_attendance_log`)
@@ -229,6 +231,11 @@ CREATE TABLE IF NOT EXISTS `attendance_x_student` (
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_attendance_x_student_users1`
     FOREIGN KEY (`id_student`)
+    REFERENCES `user` (`id_user`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_attendance_x_student_user1`
+    FOREIGN KEY (`id_marked_by`)
     REFERENCES `user` (`id_user`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)

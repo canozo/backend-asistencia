@@ -29,5 +29,6 @@ app.use('/api/classroom', require('./api/classroom'));
 app.use('/api/class', require('./api/class'));
 app.use('/api/section', require('./api/section'));
 app.use('/api/schedule', require('./api/schedule'));
+app.use('/api/attendance', require('./api/attendance'));
 
 server.listen(port, () => console.log(`Servidor HTTP escuchando (${port})`));

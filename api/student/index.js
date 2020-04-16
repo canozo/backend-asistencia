@@ -168,7 +168,7 @@ router.post('/upload', auth.getToken, auth.verifyStudent, upload.single('face'),
       const accountNumber = result[0].account_number;
       fs.readFile(req.file.path, (err, data) => {
         if (err) {
-          return res.status(500).json({ status: 'error', msg: 'Error reading file.'});
+          return res.status(500).json({ status: 'error', msg: 'Error leyendo archivo de imagen' });
         }
 
         const s3 = new AWS.S3({
@@ -183,9 +183,9 @@ router.post('/upload', auth.getToken, auth.verifyStudent, upload.single('face'),
           Body: data,
         }, (s3err, s3data) => {
           if (s3err) {
-            return res.status(500).json({ status: 'error', msg: 'Error uploading file to S3.'});
+            return res.status(500).json({ status: 'error', msg: 'Error cargando archivo a S3' });
           }
-          res.json({ status: 'success', msg: 'File uploaded.'});
+          res.json({ status: 'success', msg: 'Imagen cargada' });
         });
       });
     }

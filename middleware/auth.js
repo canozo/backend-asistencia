@@ -71,6 +71,19 @@ auth.verifyProfessor = (req, res, next) => {
   });
 };
 
+auth.verifyProfOrCamera = (req, res, next) => {
+  jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
+    if (err) {
+      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
+    } else if (data.user.idUserType !== 2 && data.user.idUserType !== 4) {
+      res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
+    } else {
+      req.data = data;
+      next();
+    }
+  });
+};
+
 auth.verifyStudent = (req, res, next) => {
   jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
     if (err) {
