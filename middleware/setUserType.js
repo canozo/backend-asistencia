@@ -11,6 +11,10 @@ const setUserType = {
     req.body.idUserType = 3;
     next();
   },
+  camera: (req, res, next) => {
+    req.body.idUserType = 4;
+    next();
+  },
 };
 
 module.exports = setUserType;

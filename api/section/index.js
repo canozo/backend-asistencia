@@ -172,13 +172,15 @@ router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
   let query = 'insert into section_x_schedule_day (id_section, id_schedule_day) values ';
   const values = [];
 
+  // OBSERVACION solo revisa si hay conflicto en el mismo semestre, habria problemas si hay
+  // semestres para pregrado y maestria, y se supone que se revisa en todos los semestres activos
+
   let daysQuery =
     `select count(*) as conflict from (
       select
       a.schedule_time as start_time,
       b.schedule_time as finish_time,
       id_semester,
-      id_schedule_day,
       id_classroom,
       section.id_section as id_section
       from section
@@ -186,8 +188,6 @@ router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
       on id_start_time = a.id_schedule_time
       inner join schedule_time b
       on id_finish_time = b.id_schedule_time
-      inner join section_x_schedule_day
-      on section.id_section = section_x_schedule_day.id_section
       where section.id_section = ?
     ) a
     inner join (
@@ -207,8 +207,7 @@ router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
       on section.id_section = section_x_schedule_day.id_section
     ) b
     on
-      a.id_schedule_day = b.id_schedule_day
-      and a.id_semester = b.id_semester
+      a.id_semester = b.id_semester
       and a.id_classroom = b.id_classroom
     where a.id_section != b.id_section
     and a.start_time < b.finish_time and b.start_time < a.finish_time
@@ -224,6 +223,7 @@ router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
     inner join section_x_schedule_day
     on section.id_section = section_x_schedule_day.id_section
     where id_professor = (select id_professor from section where id_section = ?)
+    and id_semester = (select id_semester from section where id_section = ?)
     and section.id_section != ?
     and a.schedule_time < (
       select
@@ -241,11 +241,11 @@ router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
       where section.id_section = ?
     ) < b.schedule_time
     and (`;
-  const profValues = [idSection, idSection, idSection, idSection];
+  const profValues = [idSection, idSection, idSection, idSection, idSection];
 
   idDays.forEach(day => {
     // days check
-    daysQuery += 'a.id_schedule_day = ? or ';
+    daysQuery += 'id_schedule_day = ? or ';
     daysValues.push(day);
 
     // professor check

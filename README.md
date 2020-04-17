@@ -84,6 +84,7 @@ Para que el servidor se ejecute correctamente necesitamos las siguientes variabl
 # aws
 AWS_ACCESS_KEY_ID= # Access Key ID de usuario con acceso a S3
 AWS_SECRET_ACCESS_KEY_ID= # Secret access Key ID de usuario con acceso a S3
+MAIN_REGION= # Nombre de la región principal de AWS (ej: us-east-1)
 MAIN_BUCKET= # Nombre del Bucket S3 donde se ingresan las imágenes
 
 # bcrypt

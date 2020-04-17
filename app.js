@@ -23,6 +23,7 @@ app.use('/api/semester', require('./api/semester'));
 app.use('/api/admin', require('./api/admin'));
 app.use('/api/professor', require('./api/professor'));
 app.use('/api/student', require('./api/student'));
+app.use('/api/camera', require('./api/camera'));
 app.use('/api/campus', require('./api/campus'));
 app.use('/api/building', require('./api/building'));
 app.use('/api/classroom', require('./api/classroom'));
