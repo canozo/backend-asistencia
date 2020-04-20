@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const uuid = require('uuid');
+const path = require('path');
 const fs = require('fs');
 const AWS = require('aws-sdk');
 const auth = require('../../middleware/auth');
@@ -165,7 +166,7 @@ router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), (re
         return res.json({ status: 'error', msg: 'Error al modificar numero de cuenta' });
       }
 
-      const accountNumber = result[0].account_number;
+      const { accountNumber } = result[0];
       fs.readFile(req.file.path, (err, data) => {
         if (err) {
           return res.status(500).json({ status: 'error', msg: 'Error leyendo archivo de imagen' });
@@ -185,6 +186,14 @@ router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), (re
           if (s3err) {
             return res.status(500).json({ status: 'error', msg: 'Error cargando archivo a S3' });
           }
+
+          const deletePath = path.join(__dirname, '..', '..', 'tmp', 'faces', req.file.filename);
+          fs.unlink(deletePath, (err) => {
+            if (err) {
+              console.log('Error eliminando imagen del servidor: ', err);
+            }
+          });
+
           res.json({ status: 'success', msg: 'Imagen cargada' });
         });
       });

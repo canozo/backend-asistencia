@@ -122,10 +122,10 @@ router.post('/', auth.getToken, auth.verify(2), (req, res) => {
  * @permissions professor
  * @permissions camera
  */
-router.post('/:idAttendanceLog/mark/:idStudent', auth.getToken, auth.verify(2), (req, res) => {
+router.post('/:idAttendanceLog/mark/:idStudent', auth.getToken, auth.verify(2, 4), (req, res) => {
   const { idAttendanceLog, idStudent } = req.params;
   db.query(
-    `insert into attendance_x_student
+    `insert ignore into attendance_x_student
     (id_attendance_log, id_student, id_marked_by, marked_at)
     values (?, ?, ?, now())`,
     [idAttendanceLog, idStudent, req.data.user.idUser],
@@ -138,6 +138,47 @@ router.post('/:idAttendanceLog/mark/:idStudent', auth.getToken, auth.verify(2), 
     }
   );
 });
+
+/**
+ * Mark a students attendance with account number instead of user id
+ * @route POST /api/attendance/:idAttendanceLog/mark-account-num/:accountNumber
+ * @permissions professor
+ * @permissions camera
+ */
+router.post(
+  '/:idAttendanceLog/mark-account-num/:accountNumber',
+  auth.getToken,
+  auth.verify(2, 4),
+  (req, res) => {
+    const { idAttendanceLog, accountNumber } = req.params;
+    db.query(
+      'select id_user as idUser from user where account_number = ?',
+      [accountNumber],
+      (error, result) => {
+        if (error) {
+          return res.json({ status: 'error', msg: 'Error al obtener id de usuario de estudiante' });
+        } else if (result.length === 0) {
+          return res.json({ status: 'error', msg: 'Error, numero de cuenta no valido' });
+        }
+
+        const { idUser } = result[0];
+        db.query(
+          `insert ignore into attendance_x_student
+          (id_attendance_log, id_student, id_marked_by, marked_at)
+          values (?, ?, ?, now())`,
+          [idAttendanceLog, idUser, req.data.user.idUser],
+          (error) => {
+            if (error) {
+              res.json({ status: 'error', msg: 'Error al marcar estudiante (con num. cuenta)' });
+            } else {
+              res.json({ status: 'success', msg: 'Estudiante marcado (con num. cuenta)' });
+            }
+          }
+        );
+      }
+    );
+  }
+);
 
 /**
  * Unmark a students attendance
