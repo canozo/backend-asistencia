@@ -21,7 +21,7 @@ router.post('/login', auth.getUser, auth.signToken, (req, res) => {
  * @body {string} surnames
  * @body {string} email
  * @body {string} password
- * @body {string | undefined} accountNumber
+ * @body {string} accountNumber
  */
 router.post(
   '/register',

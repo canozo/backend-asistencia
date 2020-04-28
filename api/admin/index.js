@@ -8,6 +8,10 @@ const router = express.Router();
  * Create new admin user
  * @route POST /api/admin
  * @permissions admin
+ * @body {string} names
+ * @body {string} surnames
+ * @body {string} email
+ * @body {string} password
  */
 router.post(
   '/',

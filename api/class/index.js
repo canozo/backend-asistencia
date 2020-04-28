@@ -67,7 +67,7 @@ router.post('/', auth.getToken, auth.verify(1), (req, res) => {
 });
 
 /**
- * Create a new class
+ * Update class data
  * @route PUT /api/class/:idClass
  * @permissions admin
  * @body {string} className

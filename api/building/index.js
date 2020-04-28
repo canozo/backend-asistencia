@@ -89,7 +89,7 @@ router.put('/:idBuilding', auth.getToken, auth.verify(1), (req, res) => {
 });
 
 /**
- * Delet building (if it's not referenced anywhere else in the db)
+ * Delete building (if it's not referenced anywhere else in the db)
  * @route DELETE /api/building/:idBuilding
  * @permissions admin
  */

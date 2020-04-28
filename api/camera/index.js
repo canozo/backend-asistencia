@@ -58,14 +58,13 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
 });
 
 /**
- * Create a new cameras user
+ * Create a new camera user
  * @route POST /api/camera
  * @permissions admin
  * @body {string} names
  * @body {string} surnames
  * @body {string} email
  * @body {string} password
- * @body {string | undefined} accountNumber
  */
 router.post(
   '/',

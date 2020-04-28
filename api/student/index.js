@@ -96,7 +96,7 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
  * @body {string} surnames
  * @body {string} email
  * @body {string} password
- * @body {string | undefined} accountNumber
+ * @body {string} accountNumber
  */
 router.post(
   '/',

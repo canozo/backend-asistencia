@@ -7,9 +7,8 @@ const router = express.Router();
 /**
  * Get all time schedule data
  * @route GET /api/schedule
- * @permissions admin
  */
-router.get('/', auth.getToken, auth.verify(1), (req, res) => {
+router.get('/', (req, res) => {
   db.query(
     'select id_schedule_time as idScheduleTime, schedule_time as scheduleTime from schedule_time',
     (error, result) => {
@@ -24,16 +23,17 @@ router.get('/', auth.getToken, auth.verify(1), (req, res) => {
 
 /**
  * Create a new time schedule
- * @route GET /api/schedule
+ * @route POST /api/schedule
  * @permissions admin
  * @body {string} scheduleTime
  */
 router.post('/', auth.getToken, auth.verify(1), (req, res) => {
+  // TODO puede que tenga problemas
   db.query(
     `insert into schedule_time
     (schedule_time)
     values
-    (?)`,
+    (time(?))`,
     [req.body.scheduleTime],
     (error, result) => {
       if (error) {
@@ -52,6 +52,7 @@ router.post('/', auth.getToken, auth.verify(1), (req, res) => {
  * @body {string} scheduleTime
  */
 router.put('/:idScheduleTime', auth.getToken, auth.verify(1), (req, res) => {
+  // TODO solo actualizar si no se esta utilizando
   const { scheduleTime } = req.body;
   db.query(
     'update schedule_time set schedule_time = ? where id_schedule_time = ?',

@@ -99,13 +99,13 @@ router.get('/:from/:to', pagination, (req, res) => {
  * Create a new section
  * @route POST /api/section
  * @permissions admin
-* @body {string | number} idSemester
-* @body {string | number} idClass
-* @body {string | number} idClassroom
-* @body {string | number} idStartTime
-* @body {string | number} idFinishTime
-* @body {string | number} idProfessor
-* @body {string | number | undefined} comments
+ * @body {string | number} idSemester
+ * @body {string | number} idClass
+ * @body {string | number} idClassroom
+ * @body {string | number} idStartTime
+ * @body {string | number} idFinishTime
+ * @body {string | number} idProfessor
+ * @body {string | undefined} comments
  */
 router.post('/', auth.getToken, auth.verify(1), (req, res) => {
   const values = [
