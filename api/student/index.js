@@ -158,6 +158,10 @@ router.put('/:idStudent', auth.getToken, auth.verify(1), (req, res) => {
  * @permissions student
  */
 router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), (req, res) => {
+  if (!req.file) {
+    return res.json({ status: 'error', msg: 'Error, el archivo no fue definido' })
+  }
+
   db.query(
     'select account_number as accountNumber from user where id_user = ?',
     [req.data.user.idUser],
