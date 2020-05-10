@@ -11,7 +11,7 @@ const router = express.Router();
  * @body {string} password
  */
 router.post('/login', auth.getUser, auth.signToken, (req, res) => {
-  res.json({ status: 'success', token: req.token });
+  res.json({ status: 'success', token: req.token, user: req.user });
 });
 
 /**
@@ -30,7 +30,7 @@ router.post(
   auth.getUser,
   auth.signToken,
   (req, res) => {
-    res.json({ status: 'success', token: req.token });
+    res.json({ status: 'success', token: req.token, user: req.user });
   }
 );
 

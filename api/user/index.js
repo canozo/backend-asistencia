@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const regex = require('../config/regex');
+const regex = require('../../config/regex');
 const pagination = require('../../middleware/pagination');
 const auth = require('../../middleware/auth');
 const db = require('../../config/db');

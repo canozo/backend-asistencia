@@ -125,7 +125,7 @@ router.post(
   auth.getUser,
   auth.signToken,
   (req, res) => {
-    res.json({ status: 'success', token: req.token });
+    res.json({ status: 'success', token: req.token, user: req.user });
   }
 );
 

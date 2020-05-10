@@ -4,6 +4,7 @@ USE `asistencia`;
 CREATE TABLE IF NOT EXISTS `user_type` (
   `id_user_type` INT NOT NULL AUTO_INCREMENT,
   `user_type` VARCHAR(30) NOT NULL COMMENT 'Descripcion del tipo de usuario, ej: Estudiante, Profesor, Personal Administrativo',
+  `alias` VARCHAR(20) NOT NULL COMMENT 'Alias corto del tipo de usuario, ej: student, professor, admin, camera. Se utiliza para las rutas del sitio web.',
   PRIMARY KEY (`id_user_type`))
 ENGINE = InnoDB;
 

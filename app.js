@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
+app.use('/api/user', require('./api/user'));
 app.use('/api/auth', require('./api/auth'));
 app.use('/api/semester', require('./api/semester'));
 app.use('/api/admin', require('./api/admin'));

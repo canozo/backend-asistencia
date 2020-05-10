@@ -40,7 +40,6 @@ router.get('/', (req, res) => {
     on section.id_professor = user.id_user`,
     (error, result) => {
       if (error) {
-        console.log(error);
         res.json({ status: 'error', msg: 'Error al obtener secciones' });
       } else {
         res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
@@ -309,7 +308,6 @@ router.post('/days', auth.getToken, auth.verify(1), (req, res) => {
             // agregar los días que si marco
             db.query(query, values, (error) => {
               if (error && values.length > 0) {
-                console.log(error);
                 res.json({ status: 'error', msg: 'Error al agregar días de semana a la sección' });
               } else {
                 res.json({ status: 'success', msg: 'Dias de semana de sección modificados' });

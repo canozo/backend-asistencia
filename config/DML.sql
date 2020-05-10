@@ -1,11 +1,11 @@
 -- tipos de usuario
 insert ignore into user_type
-(id_user_type, user_type)
+(id_user_type, user_type, alias)
 values
-(1, 'Personal Administrativo'),
-(2, 'Profesor'),
-(3, 'Estudiante'),
-(4, 'Camara');
+(1, 'Personal Administrativo', 'admin'),
+(2, 'Profesor', 'professor'),
+(3, 'Estudiante', 'student'),
+(4, 'Camara', 'camera');
 
 -- horarios
 insert ignore into schedule_time

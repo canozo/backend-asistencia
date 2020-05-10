@@ -64,13 +64,14 @@ auth.getUser = (req, res, next) => {
   const { email, password } = req.body;
 
   db.query(
-    `select id_user, id_user_type, names, surnames, email, password, account_number
-    from user
+    `select id_user, a.id_user_type as id_user_type, b.alias as user_type, names, surnames, email, password, account_number
+    from user a
+    inner join user_type b
+    on a.id_user_type = b.id_user_type
     where email = ?`,
     [email.trim().toLowerCase(), password],
     (error, result) => {
       if (error) {
-        console.error(error);
         res.json({ status: 'error', msg: 'Error MySQL' });
       } else if (result.length !== 1) {
         res.json({ status: 'error', msg: `No se encontro al usuario con correo ${email}` });
@@ -86,6 +87,7 @@ auth.getUser = (req, res, next) => {
             req.user = {
               idUser: result[0].id_user,
               idUserType: result[0].id_user_type,
+              userType: result[0].user_type,
               names: result[0].names,
               surnames: result[0].surnames,
               email: result[0].email,
