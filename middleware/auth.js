@@ -77,10 +77,10 @@ auth.getUser = (req, res, next) => {
         res.json({ status: 'error', msg: `No se encontro al usuario con correo ${email}` });
       } else {
         // verify that the passwords are the same
-        bcrypt.compare(password, result[0].password, (err, res) => {
+        bcrypt.compare(password, result[0].password, (err, match) => {
           if (err) {
             res.json({ status: 'error', msg: 'Error bcryptjs' });
-          } else if (!res) {
+          } else if (!match) {
             res.json({ status: 'error', msg: 'Clave incorrecta' });
           } else {
             // info that is stored into token
