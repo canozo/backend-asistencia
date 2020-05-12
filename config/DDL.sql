@@ -222,6 +222,7 @@ CREATE TABLE IF NOT EXISTS `attendance_x_student` (
   `id_student` INT NOT NULL,
   `id_marked_by` INT NOT NULL,
   `marked_at` DATETIME(0) NOT NULL COMMENT 'Hora en la que se marco al estudiante, ej: 18:35',
+  `capture_key` VARCHAR(30) COMMENT 'Si se marco con una camara, el capture key que se utilizo, en otras palabras, el rostro de la persona que se utilizo para marcar al estudiante, ej: 20200419183217282336.jpg para el key captures/20200419183217282336.jpg',
   PRIMARY KEY (`id_attendance_log`, `id_student`),
   INDEX `fk_attendance_x_student_users1_idx` (`id_student` ASC),
   INDEX `fk_attendance_x_student_user1_idx` (`id_marked_by` ASC),
