@@ -89,6 +89,49 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
 });
 
 /**
+ * Get all registered face ids by a student
+ * @route GET /api/student/faces
+ * @permissions student
+ * @changed
+ */
+router.get('/faces', auth.getToken, auth.verify(3), (req, res) => {
+  db.query(
+    'select account_number as accountNumber from user where id_user = ?',
+    [req.data.user.idUser],
+    (error, result) => {
+      if (error) {
+        return res.json({ status: 'error', msg: 'Error al obtener número de cuenta' });
+      }
+
+      const dynamodb = new AWS.DynamoDB({
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
+        region: process.env.MAIN_REGION,
+      });
+
+      const { accountNumber } = result[0];
+      const params = {
+        TableName: 'students_collection',
+        FilterExpression: 'AccountNumber = :accountNumber',
+        ExpressionAttributeValues: {
+          ':accountNumber': { S: String(accountNumber) }
+        }
+      };
+
+      dynamodb.scan(params, (error, result) => {
+        if (error) {
+          return res.json({ status: 'error', msg: 'Error al obtener identificadores de rostros' });
+        }
+
+        const data = result.Items.map(item => item.RekognitionId.S);
+
+        return res.json({ status: 'success', msg: 'Identificadores obtenidos!', data });
+      });
+    }
+  );
+});
+
+/**
  * Create a new student registered by admin
  * @route POST /api/student
  * @permissions admin
@@ -137,16 +180,16 @@ router.post(
  */
 router.put('/:idStudent', auth.getToken, auth.verify(1), (req, res) => {
   if (!regex.accountNum.test(req.body.accountNumber)) {
-    return res.json({ status: 'error', msg: 'Numero de cuenta no valido' });
+    return res.json({ status: 'error', msg: 'Número de cuenta no valido' });
   }
   db.query(
     'update user set accountNumber = ? where id_user = ?',
     [req.body.accountNumber, req.params.idStudent],
     (error) => {
       if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar numero de cuenta' });
+        res.json({ status: 'error', msg: 'Error al modificar número de cuenta' });
       } else {
-        res.json({ status: 'success', msg: 'Numero de cuenta modificado' });
+        res.json({ status: 'success', msg: 'Número de cuenta modificado' });
       }
     }
   );
@@ -167,7 +210,7 @@ router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), (re
     [req.data.user.idUser],
     (error, result) => {
       if (error) {
-        return res.json({ status: 'error', msg: 'Error al modificar numero de cuenta' });
+        return res.json({ status: 'error', msg: 'Error al obtener número de cuenta' });
       }
 
       const { accountNumber } = result[0];

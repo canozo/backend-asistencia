@@ -3,9 +3,9 @@ const max = 50;
 
 module.exports = (req, res, next) => {
   if (isNaN(req.params.from)) {
-    return res.json({ status: 'error', msg: 'Parametro "from" no es un numero.' });
+    return res.json({ status: 'error', msg: 'Parametro "from" no es un número.' });
   } else if (isNaN(req.params.to)) {
-    return res.json({ status: 'error', msg: 'Parametro "to" no es un numero.' });
+    return res.json({ status: 'error', msg: 'Parametro "to" no es un número.' });
   }
 
   const from = Number(req.params.from);

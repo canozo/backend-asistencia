@@ -88,7 +88,7 @@ router.put('/', auth.getToken, auth.verifyAny, (req, res) => {
     [email.trim().toLowerCase(), names, surnames, req.data.user.idUser],
     (error) => {
       if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar usuario' });
+        res.json({ status: 'error', msg: 'Error al modificar usuario, correo ya existe.' });
       } else {
         res.json({ status: 'success', msg: 'Usuario modificado' });
       }

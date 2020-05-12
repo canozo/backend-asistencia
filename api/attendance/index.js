@@ -41,7 +41,7 @@ router.post('/', auth.getToken, auth.verify(2), (req, res) => {
   const { idSection } = req.body;
 
   if (isNaN(idSection)) {
-    return res.json({ status: 'error', msg: 'Parametro "idSection" no es un numero' });
+    return res.json({ status: 'error', msg: 'Parametro "idSection" no es un número' });
   }
 
   const dynamodb = new AWS.DynamoDB({
@@ -158,7 +158,7 @@ router.post(
         if (error) {
           return res.json({ status: 'error', msg: 'Error al obtener id de usuario de estudiante' });
         } else if (result.length === 0) {
-          return res.json({ status: 'error', msg: 'Error, numero de cuenta no valido' });
+          return res.json({ status: 'error', msg: 'Error, número de cuenta no valido' });
         }
 
         const { idUser } = result[0];

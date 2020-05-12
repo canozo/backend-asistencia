@@ -114,7 +114,7 @@ auth.register = (req, res, next) => {
   }
 
   if (idUserType === 3 && !regex.accountNum.test(accountNumber)) {
-    return res.json({ status: 'error', msg: 'Numero de cuenta no valido' });
+    return res.json({ status: 'error', msg: 'Número de cuenta no valido' });
   }
 
   bcrypt.hash(password, Number(process.env.BCRYPT_SALT), (hashErr, hash) => {

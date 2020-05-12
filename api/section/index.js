@@ -12,7 +12,7 @@ const router = express.Router();
 router.get('/', (req, res) => {
   db.query(
     `select
-    id_section as idSection,
+    section.id_section as idSection,
     class.code as classCode,
     class.class as class,
     section.comments as comments,
@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
     building.alias as building,
     concat_ws(' ', user.names, user.surnames) as professor,
     semester.alias as semester,
-    semester.active as semesterActive
+    group_concat(d.alias separator '') as days
     from section
     inner join semester
     on section.id_semester = semester.id_semester
@@ -37,7 +37,13 @@ router.get('/', (req, res) => {
     inner join schedule_time b
     on section.id_finish_time = b.id_schedule_time
     inner join user
-    on section.id_professor = user.id_user`,
+    on section.id_professor = user.id_user
+    inner join section_x_schedule_day c
+    on section.id_section = c.id_section
+    inner join schedule_day d
+    on c.id_schedule_day = d.id_schedule_day
+    where semester.active = 1
+    group by section.id_section`,
     (error, result) => {
       if (error) {
         res.json({ status: 'error', msg: 'Error al obtener secciones' });
