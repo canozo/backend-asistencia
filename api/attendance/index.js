@@ -282,17 +282,52 @@ router.delete('/:idAttendanceLog/mark/:idStudent', auth.getToken, auth.verify(1,
  */
 router.put('/:idAttendanceLog', auth.getToken, auth.verify(2), (req, res) => {
   const { idAttendanceLog } = req.params;
+
+  const dynamodb = new AWS.DynamoDB({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
+    region: process.env.MAIN_REGION,
+  });
+
   db.query(
-    `update attendance_log
-    set closed_at = now()
-    where id_attendance_log = ? and closed_at is null`,
+    `select section.id_classroom as IdClassroom
+    from attendance_log
+    inner join section
+    on section.id_section = attendance_log.id_section
+    where id_attendance_log = ?`,
     [idAttendanceLog],
-    (error) => {
+    (error, result) => {
       if (error) {
-        res.json({ status: 'error', msg: 'Error al cerrar asistencia' });
-      } else {
-        res.json({ status: 'success', msg: 'Asistencia cerrada' });
+        return res.json({ status: 'error', msg: 'Error al obtener id de aula de clases' });
       }
+
+      const { IdClassroom } = result[0];
+      db.query(
+        `update attendance_log
+        set closed_at = now()
+        where id_attendance_log = ? and closed_at is null`,
+        [idAttendanceLog],
+        (error) => {
+          if (error) {
+            return res.json({ status: 'error', msg: 'Error al cerrar asistencia' });
+          }
+
+          const delParams = {
+            TableName: 'active_classrooms',
+            Key: {
+              IdClassroom: { N: String(IdClassroom) },
+            }
+          };
+
+          dynamodb.deleteItem(delParams, (error) => {
+            if (error) {
+              return res.json({ status: 'error', msg: 'Error cerrando asistencia (DynamoDB)' });
+            }
+
+            return res.json({ status: 'success', msg: 'Asistencia cerrada' });
+          });
+        }
+      );
     }
   );
 });
