@@ -81,11 +81,10 @@ def infinite_infer_run():
             'email': os.environ['CAMERA_USER'],
             'password': os.environ['CAMERA_PW']
         })
-        host = 'http://192.168.1.2:5000'
+        host = 'http://ec2-3-86-140-112.compute-1.amazonaws.com'
         url = host + '/api/auth/login'
         req = urllib2.Request(url, data)
         token = ''
-        token_age = 0
 
         # s3 client
         s3 = boto3.client(
@@ -129,6 +128,8 @@ def infinite_infer_run():
         input_height = 300
         input_width = 300
 
+        token_age = 0
+        
         # Do inference until the lambda is killed.
         while True:
             if int(time.time() * 1000.0) > token_age + 5400000:
