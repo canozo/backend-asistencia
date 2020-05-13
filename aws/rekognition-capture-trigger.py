@@ -38,12 +38,12 @@ def lambda_handler(event, context):
                 if match['Face']['Confidence'] >= 90:
                     # There is a sure match, mark attendance and stop looking for faces
                     data = urllib.urlencode({})
-                    host = 'http://192.168.1.2:5000'
-                    url = host + '/api/attendance'
+                    host = 'http://ec2-3-86-140-112.compute-1.amazonaws.com'
+                    url = host + '/api/attendance/{}/mark-account-num/{}'.format(idAttendanceLog, accountNumber)
                     req = urllib2.Request(url, data)
                     req.add_header('Authorization', 'Bearer ' + token)
-                    # res = urllib2.urlopen(req)
-                    print('{}/{}/mark-account-num/{}'.format(url, idAttendanceLog, accountNumber))
+                    res = urllib2.urlopen(req)
+                    print(url)
                     break
             else:
                 print('Face not found in database.')
