@@ -89,6 +89,45 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
 });
 
 /**
+ * Get student attendance history
+ * @route GET /api/student/attendance
+ * @permissions student
+ * @changed
+ */
+router.get('/attendance', auth.getToken, auth.verify(3), (req, res) => {
+  db.query(
+    `select
+    section.id_section as idSection,
+    al.id_attendance_log as idLog,
+    id_professor as idProfessor,
+    id_marked_by as idMarkedBy,
+    marked_at as markedAt,
+    class as className,
+    code as classCode
+    from attendance_log al
+    inner join section
+    on al.id_section = section.id_section
+    inner join class
+    on section.id_class = class.id_class
+    inner join section_x_student sxs
+    on section.id_section = sxs.id_section
+    inner join user
+    on user.id_user = sxs.id_student
+    left join attendance_x_student axs
+    on al.id_attendance_log = axs.id_attendance_log
+    where user.id_user = ?`,
+    [req.data.user.idUser],
+    (error, result) => {
+      if (error) {
+        return res.json({ status: 'error', msg: 'Error al obtener historial de asistencia' });
+      }
+
+      res.json({ status: 'success', msg: 'Historial de asistencia obtenido', data: result });
+    }
+  );
+});
+
+/**
  * Get all registered face ids by a student
  * @route GET /api/student/faces
  * @permissions student
