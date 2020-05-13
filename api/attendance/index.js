@@ -62,13 +62,15 @@ router.get('/:idAttendanceLog', auth.getToken, auth.verify(2), (req, res) => {
     on user.id_user = sxs.id_student
     left join attendance_x_student axs
     on al.id_attendance_log = axs.id_attendance_log
-    where al.id_attendance_log = ? and al.closed_at is null`,
-    [req.params.idAttendanceLog],
+    where al.id_attendance_log = ?
+    and section.id_professor = ?
+    and al.closed_at is null`,
+    [req.params.idAttendanceLog, req.data.user.idUser],
     (error, result) => {
       if (error) {
         return res.json({ status: 'error', msg: 'Error al obtener asistencia' });
       } else if (result.length === 0) {
-        return res.json({ status: 'error', msg: 'Error, la asistencia ya no está abierta' });
+        return res.json({ status: 'error', msg: 'La asistencia ya no está abierta' });
       }
 
       res.json({ status: 'success', msg: 'Asistencia obtenida', data: result });
