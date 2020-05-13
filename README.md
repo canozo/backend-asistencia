@@ -5,9 +5,9 @@ En este repositorio se encuentran todos los recursos y el código necesario para
 ## EC2
 Necesitamos crear una instancia de EC2 para desplegar el Web Server. En este caso utilizaremos Ubuntu 18. Al momento de crear la instancia, asegurarse que en el `Security Group` se permitan los puertos de SSH, HTTP y HTTPS a cualquier IP de origen.
 
-Luego debemos descargar las llaves de acceso para ingresar con SSH, y crear la instancia. Para ingresar a la instancia utilizamos el siguiente comando, donde `llaves.pem` es el archivo de llaves que acabamos de descargar y `ec2-3-82-189-61.compute-1.amazonaws.com` es el DNS de nuestra instancia:
+Luego debemos descargar las llaves de acceso para ingresar con SSH, y crear la instancia. Para ingresar a la instancia utilizamos el siguiente comando, donde `llaves.pem` es el archivo de llaves que acabamos de descargar y `ec2-3-86-140-112.compute-1.amazonaws.com` es el DNS de nuestra instancia:
 ```
-ssh -i llaves.pem ubuntu@ec2-3-82-189-61.compute-1.amazonaws.com
+ssh -i asistencia-key.pem ubuntu@ec2-3-86-140-112.compute-1.amazonaws.com
 ```
 
 ## Node
