@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
     building.alias as building,
     concat_ws(' ', user.names, user.surnames) as professor,
     semester.alias as semester,
-    group_concat(d.alias separator '') as days
+    group_concat(d.alias order by d.id_schedule_day separator '') as days
     from section
     inner join semester
     on section.id_semester = semester.id_semester

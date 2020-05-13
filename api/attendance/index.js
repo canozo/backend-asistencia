@@ -6,27 +6,72 @@ const db = require('../../config/db');
 const router = express.Router();
 
 /**
- * Get attendance in one specific log
+ * Get open attendance logs by a professor, also used to verify if there is attendance open
+ * @route GET /api/attendance
+ * @permissions professor
+ * @changed
+ */
+router.get('/', auth.getToken, auth.verify(2), (req, res) => {
+  db.query(
+    `select
+    id_attendance_log as idAttendanceLog,
+    s.id_section as idSection,
+    class as className,
+    code as classCode
+    from attendance_log al
+    inner join section s
+    on al.id_section = s.id_section
+    inner join user prof
+    on prof.id_user = s.id_professor
+    inner join class
+    on class.id_class = s.id_class
+    where id_user = ?
+    and closed_at is null`,
+    [req.data.user.idUser],
+    (error, result) => {
+      if (error) {
+        return res.json({ status: 'error', msg: 'Error al verificar asistencia abierta' });
+      } else if (result.length === 0) {
+        return res.json({ status: 'success', msg: 'No tiene asistencia abierta' });
+      }
+
+      res.json({ status: 'success', msg: 'Asistencia obtenida', data: result[0] });
+    }
+  );
+});
+
+/**
+ * Get student attendance in one specific log
  * @route GET /api/attendance/:idAttendanceLog
  * @permissions professor
  */
 router.get('/:idAttendanceLog', auth.getToken, auth.verify(2), (req, res) => {
   db.query(
     `select
-    id_student as idStudent,
+    sxs.id_student as idStudent,
+    concat_ws(' ', user.names, user.surnames) as student,
+    user.account_number as accountNumber,
     id_marked_by as idMarkedBy,
     marked_at as markedAt
-    from attendance_x_student
-    inner join attendance_log
-    on attendance_x_student.id_attendance_log = attendance_log.id_attendance_log
-    where attendance_log.id_attendance_log = ?`,
+    from attendance_log al
+    inner join section
+    on al.id_section = section.id_section
+    inner join section_x_student sxs
+    on section.id_section = sxs.id_section
+    inner join user
+    on user.id_user = sxs.id_student
+    left join attendance_x_student axs
+    on al.id_attendance_log = axs.id_attendance_log
+    where al.id_attendance_log = ? and al.closed_at is null`,
     [req.params.idAttendanceLog],
     (error, result) => {
       if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener asistencia' });
-      } else {
-        res.json({ status: 'success', msg: 'Asistencia obtenida', data: result });
+        return res.json({ status: 'error', msg: 'Error al obtener asistencia' });
+      } else if (result.length === 0) {
+        return res.json({ status: 'error', msg: 'Error, la asistencia ya no está abierta' });
       }
+
+      res.json({ status: 'success', msg: 'Asistencia obtenida', data: result });
     }
   );
 });
@@ -51,65 +96,92 @@ router.post('/', auth.getToken, auth.verify(2), (req, res) => {
   });
 
   db.query(
-    'insert into attendance_log (id_section, opened_at) values (?, now())',
-    [idSection],
+    `select id_attendance_log as idAttendanceLog
+    from attendance_log al
+    inner join section s
+    on al.id_section = s.id_section
+    inner join user prof
+    on prof.id_user = s.id_professor
+    where id_user = ?
+    and closed_at is null`,
+    [req.data.user.idUser],
     (error, result) => {
       if (error) {
-        return res.json({ status: 'error', msg: 'Error al crear nueva asistencia' });
+        return res.json({ status: 'error', msg: 'Error al verificar asistencia abierta' });
+      } else if (result.length > 0) {
+        const { idAttendanceLog } = result[0];
+        return res.json({
+          status: 'error',
+          msg: 'Ya tiene asistencia abierta',
+          data: idAttendanceLog,
+        });
       }
 
-      const { insertId } = result;
       db.query(
-        'select id_classroom as IdClassroom from section where id_section = ?',
+        'insert into attendance_log (id_section, opened_at) values (?, now())',
         [idSection],
         (error, result) => {
           if (error) {
-            return res.json({ status: 'error', msg: 'Error al obtener id de aula de clases' });
+            return res.json({ status: 'error', msg: 'Error al crear nueva asistencia' });
           }
 
-          const { IdClassroom } = result[0];
-          const putParams = {
-            TableName: 'active_classrooms',
-            Item: {
-              IdClassroom: { N: String(IdClassroom) },
-              IdAttendanceLog: { N: String(insertId) },
-            },
-          };
+          const { insertId } = result;
+          db.query(
+            'select id_classroom as IdClassroom from section where id_section = ?',
+            [idSection],
+            (error, result) => {
+              if (error) {
+                return res.json({ status: 'error', msg: 'Error al obtener id de aula de clases' });
+              }
 
-          dynamodb.putItem(putParams, (error) => {
-            if (error) {
-              return res.json({ status: 'error', msg: 'Error abriendo asistencia con DynamoDB' });
-            }
-
-            setTimeout(() => {
-              const delParams = {
+              const { IdClassroom } = result[0];
+              const putParams = {
                 TableName: 'active_classrooms',
-                Key: {
+                Item: {
                   IdClassroom: { N: String(IdClassroom) },
-                }
+                  IdAttendanceLog: { N: String(insertId) },
+                },
               };
 
-              dynamodb.deleteItem(delParams, (error) => {
+              dynamodb.putItem(putParams, (error) => {
                 if (error) {
-                  console.log('Error cerrando asistencia (DynamoDB)');
+                  return res.json({
+                    status: 'error',
+                    msg: 'Error abriendo asistencia con DynamoDB',
+                  });
                 }
+
+                setTimeout(() => {
+                  const delParams = {
+                    TableName: 'active_classrooms',
+                    Key: {
+                      IdClassroom: { N: String(IdClassroom) },
+                    }
+                  };
+
+                  dynamodb.deleteItem(delParams, (error) => {
+                    if (error) {
+                      console.log('Error cerrando asistencia (DynamoDB)');
+                    }
+                  });
+
+                  db.query(
+                    `update attendance_log
+                    set closed_at = now()
+                    where id_attendance_log = ? and closed_at is null`,
+                    [insertId],
+                    (error) => {
+                      if (error) {
+                        console.log('Error cerrando asistencia (MySQL)');
+                      }
+                    }
+                  );
+                }, 900000);
+
+                res.json({ status: 'success', msg: 'Asistencia creada', id: insertId });
               });
-
-              db.query(
-                `update attendance_log
-                set closed_at = now()
-                where id_attendance_log = ? and closed_at is null`,
-                [insertId],
-                (error) => {
-                  if (error) {
-                    console.log('Error cerrando asistencia (MySQL)');
-                  }
-                }
-              );
-            }, 900000);
-
-            res.json({ status: 'success', msg: 'Asistencia creada', id: insertId });
-          });
+            }
+          );
         }
       );
     }

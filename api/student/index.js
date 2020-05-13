@@ -122,11 +122,64 @@ router.get('/faces', auth.getToken, auth.verify(3), (req, res) => {
         if (error) {
           return res.json({ status: 'error', msg: 'Error al obtener identificadores de rostros' });
         }
-
         const data = result.Items.map(item => item.RekognitionId.S);
-
         return res.json({ status: 'success', msg: 'Identificadores obtenidos!', data });
       });
+    }
+  );
+});
+
+/**
+ * Get all sections enrolled by the student
+ * @route GET /api/student/enrolled
+ * @changed
+ */
+router.get('/enrolled', auth.getToken, auth.verify(3), (req, res) => {
+  db.query(
+    `select
+    section.id_section as idSection,
+    class.code as classCode,
+    class.class as class,
+    section.comments as comments,
+    a.schedule_time as startTime,
+    b.schedule_time as finishTime,
+    classroom.alias as classroom,
+    building.alias as building,
+    concat_ws(' ', prof.names, prof.surnames) as professor,
+    semester.alias as semester,
+    group_concat(d.alias order by d.id_schedule_day separator '') as days
+    from section
+    inner join semester
+    on section.id_semester = semester.id_semester
+    inner join class
+    on section.id_class = class.id_class
+    inner join classroom
+    on section.id_classroom = classroom.id_classroom
+    inner join building
+    on classroom.id_building = building.id_building
+    inner join schedule_time a
+    on section.id_start_time = a.id_schedule_time
+    inner join schedule_time b
+    on section.id_finish_time = b.id_schedule_time
+    inner join user prof
+    on section.id_professor = prof.id_user
+    inner join section_x_schedule_day c
+    on section.id_section = c.id_section
+    inner join schedule_day d
+    on c.id_schedule_day = d.id_schedule_day
+    inner join section_x_student
+    on section_x_student.id_section = section.id_section
+    inner join user student
+    on student.id_user = section_x_student.id_student
+    where semester.active = 1 and student.id_user = ?
+    group by section.id_section`,
+    [req.data.user.idUser],
+    (error, result) => {
+      if (error) {
+        res.json({ status: 'error', msg: 'Error al obtener secciones' });
+      } else {
+        res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
+      }
     }
   );
 });
