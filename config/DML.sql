@@ -35,9 +35,9 @@ values
 (6, 'Viernes', 'Vi'),
 (7, 'Sabado', 'Sa');
 
--- super usuario y camara deeplens (clave: Unitec2020!)
+-- super usuario (clave: Unitec2020!) y camara deeplens (clave: CamaraAI2020!)
 insert ignore into user
 (`id_user`, `id_user_type`, `names`, `surnames`, `email`, `password`)
 values
 (1, 1, 'super', 'usuario', 'admin@unitec.edu', '$2a$12$4nEaL8xOt0OMgdGN..67GOqyCXkWCeQf18J.g2hKG6S0nNRIu9qiS'),
-(1, 4, 'deep', 'lens 1', 'deeplens1@unitec.edu', '$2a$12$4nEaL8xOt0OMgdGN..67GOqyCXkWCeQf18J.g2hKG6S0nNRIu9qiS');
+(2, 4, 'deep', 'lens 1', 'deeplens1@unitec.edu', '$2a$12$VRZM2D1FN1cY6fjEYeulmudkamrZLHl07SVoiUWVQMMnLXoEOvO7i');
