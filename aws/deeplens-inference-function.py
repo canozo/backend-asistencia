@@ -129,7 +129,7 @@ def infinite_infer_run():
         input_width = 300
 
         token_age = 0
-        
+
         # Do inference until the lambda is killed.
         while True:
             if int(time.time() * 1000.0) > token_age + 5400000:

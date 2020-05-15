@@ -9,17 +9,13 @@ const router = express.Router();
  * @route GET /api/semester
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verify(1), (req, res) => {
-  db.query(
-    'select id_semester as idSemester, alias, active from semester',
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener semestres' });
-      } else {
-        res.json({ status: 'success', msg: 'Semestres obtenidos', data: result });
-      }
-    }
-  );
+router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query('select id_semester as idSemester, alias, active from semester');
+    res.json({ status: 'success', msg: 'Semestres obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener semestres' });
+  }
 });
 
 /**
@@ -29,22 +25,17 @@ router.get('/', auth.getToken, auth.verify(1), (req, res) => {
  * @body {string} alias
  * @body {boolean} active
  */
-router.post('/', auth.getToken, auth.verify(1), (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
   const { alias, active } = req.body;
-  db.query(
-    `insert into semester
-    (id_created_by, alias, active)
-    values
-    (?, ?, ?)`,
-    [req.data.user.idUser, alias, active],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al crear semestre' });
-      } else {
-        res.json({ status: 'success', msg: 'Semestre creado', id: result.insertId });
-      }
-    }
-  );
+  try {
+    const result = await db.query(
+      'insert into semester (id_created_by, alias, active) values (?, ?, ?)',
+      [req.data.user.idUser, alias, active],
+    );
+    res.json({ status: 'success', msg: 'Semestre creado', id: result.insertId });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al crear semestre' });
+  }
 });
 
 /**
@@ -54,19 +45,17 @@ router.post('/', auth.getToken, auth.verify(1), (req, res) => {
  * @body {string} alias
  * @body {boolean} active
  */
-router.put('/:idSemester', auth.getToken, auth.verify(1), (req, res) => {
+router.put('/:idSemester', auth.getToken, auth.verify(1), async (req, res) => {
   const { alias, active } = req.body;
-  db.query(
-    'update semester set alias = ?, active = ? where id_semester = ?',
-    [alias, active, req.params.idSemester],
-    (error) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar semestre' });
-      } else {
-        res.json({ status: 'success', msg: 'Semestre modificado' });
-      }
-    }
-  );
+  try {
+    await db.query(
+      'update semester set alias = ?, active = ? where id_semester = ?',
+      [alias, active, req.params.idSemester],
+    );
+    res.json({ status: 'success', msg: 'Semestre modificado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al modificar semestre' });
+  }
 });
 
 /**
@@ -74,14 +63,13 @@ router.put('/:idSemester', auth.getToken, auth.verify(1), (req, res) => {
  * @route DELETE /api/semester/:idSemester
  * @permissions admin
  */
-router.delete('/:idSemester', auth.getToken, auth.verify(1), (req, res) => {
-  db.query('delete from semester where id_semester = ?', [req.params.idSemester], (error) => {
-    if (error) {
-      res.json({ status: 'error', msg: 'Error al eliminar semestre' });
-    } else {
-      res.json({ status: 'success', msg: 'Semestre eliminado' });
-    }
-  });
+router.delete('/:idSemester', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    await db.query('delete from semester where id_semester = ?', [req.params.idSemester]);
+    res.json({ status: 'success', msg: 'Semestre eliminado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al eliminar semestre' });
+  }
 });
 
 module.exports = router;

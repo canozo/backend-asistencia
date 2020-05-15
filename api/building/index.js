@@ -8,37 +8,29 @@ const router = express.Router();
  * Get all buildings
  * @route GET /api/building
  */
-router.get('/', (req, res) => {
-  db.query(
-    'select id_building as idBuilding, alias from building',
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener edificios' });
-      } else {
-        res.json({ status: 'success', msg: 'Edificios obtenidos', data: result });
-      }
-    }
-  );
+router.get('/', async (req, res) => {
+  try {
+    const result = await db.query('select id_building as idBuilding, alias from building');
+    res.json({ status: 'success', msg: 'Edificios obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener edificios' });
+  }
 });
 
 /**
  * Get all buildings in a specific campus
  * @route GET /api/building/:idCampus
  */
-router.get('/:idCampus', (req, res) => {
-  db.query(
-    `select id_building as idBuilding, alias
-    from building
-    where id_campus = ?`,
-    [req.params.idCampus],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener edificios' });
-      } else {
-        res.json({ status: 'success', msg: 'Edificios obtenidos', data: result });
-      }
-    }
-  );
+router.get('/:idCampus', async (req, res) => {
+  try {
+    const result = await db.query(
+      'select id_building as idBuilding, alias from building where id_campus = ?',
+      [req.params.idCampus],
+    );
+    res.json({ status: 'success', msg: 'Edificios obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener edificios' });
+  }
 });
 
 /**
@@ -48,22 +40,17 @@ router.get('/:idCampus', (req, res) => {
  * @body {string | number} idCampus
  * @body {string} alias
  */
-router.post('/', auth.getToken, auth.verify(1), (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
   const { idCampus, alias } = req.body;
-  db.query(
-    `insert into building
-    (id_campus, id_created_by, alias)
-    values
-    (?, ?, ?)`,
-    [idCampus, req.data.user.idUser, alias],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al crear edificio' });
-      } else {
-        res.json({ status: 'success', msg: 'Edificio creado', id: result.insertId });
-      }
-    }
-  );
+  try {
+    const result = await db.query(
+      'insert into building (id_campus, id_created_by, alias) values (?, ?, ?)',
+      [idCampus, req.data.user.idUser, alias],
+    );
+    res.json({ status: 'success', msg: 'Edificio creado', id: result.insertId });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al crear edificio' });
+  }
 });
 
 /**
@@ -73,19 +60,17 @@ router.post('/', auth.getToken, auth.verify(1), (req, res) => {
  * @body {string | number} idCampus
  * @body {string} alias
  */
-router.put('/:idBuilding', auth.getToken, auth.verify(1), (req, res) => {
+router.put('/:idBuilding', auth.getToken, auth.verify(1), async (req, res) => {
   const { idCampus, alias } = req.body;
-  db.query(
-    'update building set id_campus = ?, alias = ? where id_building = ?',
-    [idCampus, alias, req.params.idBuilding],
-    (error) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar edificio' });
-      } else {
-        res.json({ status: 'success', msg: 'Edificio modificado' });
-      }
-    }
-  );
+  try {
+    await db.query(
+      'update building set id_campus = ?, alias = ? where id_building = ?',
+      [idCampus, alias, req.params.idBuilding],
+    );
+    res.json({ status: 'success', msg: 'Edificio modificado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al modificar edificio' });
+  }
 });
 
 /**
@@ -93,14 +78,13 @@ router.put('/:idBuilding', auth.getToken, auth.verify(1), (req, res) => {
  * @route DELETE /api/building/:idBuilding
  * @permissions admin
  */
-router.delete('/:idBuilding', auth.getToken, auth.verify(1), (req, res) => {
-  db.query('delete from building where id_building = ?', [req.params.idBuilding], (error) => {
-    if (error) {
-      res.json({ status: 'error', msg: 'Error al eliminar edificio' });
-    } else {
-      res.json({ status: 'success', msg: 'Edificio eliminado' });
-    }
-  });
+router.delete('/:idBuilding', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    await db.query('delete from building where id_building = ?', [req.params.idBuilding]);
+    res.json({ status: 'success', msg: 'Edificio eliminado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al eliminar edificio' });
+  }
 });
 
 module.exports = router;

@@ -11,23 +11,15 @@ const router = express.Router();
  * @route GET /api/camera
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verify(1), (req, res) => {
-  db.query(
-    `select
-    id_user as idUser,
-    email,
-    names,
-    surnames
-    from user
-    where id_user_type = 4`,
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener camaras' });
-      } else {
-        res.json({ status: 'success', msg: 'Camaras obtenidas', data: result });
-      }
-    }
-  );
+router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      'select id_user as idUser, email, names, surnames from user where id_user_type = 4',
+    );
+    res.json({ status: 'success', msg: 'Camaras obtenidas', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener camaras' });
+  }
 });
 
 /**
@@ -35,26 +27,20 @@ router.get('/', auth.getToken, auth.verify(1), (req, res) => {
  * @route GET /api/camera/:from/:to
  * @permissions admin
  */
-router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) => {
-  db.query(
-    `select
-    id_user as idUser,
-    email,
-    names,
-    surnames
-    from user
-    where id_user_type = 4
-    order by id_user asc
-    limit ?, ?`,
-    [req.params.from, req.params.to],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener camaras' });
-      } else {
-        res.json({ status: 'success', msg: 'Camaras obtenidas', data: result });
-      }
-    }
-  );
+router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, res) => {
+  try {
+    const result = await db.query(
+      `select id_user as idUser, email, names, surnames
+      from user
+      where id_user_type = 4
+      order by id_user asc
+      limit ?, ?`,
+      [req.params.from, req.params.to],
+    );
+    res.json({ status: 'success', msg: 'Camaras obtenidas', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener camaras' });
+  }
 });
 
 /**
@@ -66,15 +52,8 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
  * @body {string} email
  * @body {string} password
  */
-router.post(
-  '/',
-  auth.getToken,
-  auth.verify(1),
-  setUserType.camera,
-  auth.register,
-  (req, res) => {
-    res.json({ status: 'success', msg: 'Usuario de camara registrado' });
-  },
-);
+router.post('/', auth.getToken, auth.verify(1), setUserType.camera, auth.register, (req, res) => {
+  res.json({ status: 'success', msg: 'Usuario de camara registrado' });
+});
 
 module.exports = router;

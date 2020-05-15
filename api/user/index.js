@@ -12,26 +12,24 @@ const router = express.Router();
  * @route GET /api/user
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verify(1), (req, res) => {
-  db.query(
-    `select
-    id_user as idUser,
-    user_type as userType,
-    email,
-    names,
-    surnames,
-    account_number as accountNumber
-    from user a
-    inner join user_type b
-    on a.id_user_type = b.id_user_type`,
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener usuarios' });
-      } else {
-        res.json({ status: 'success', msg: 'Usuarios obtenidos', data: result });
-      }
-    }
-  );
+router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      id_user as idUser,
+      user_type as userType,
+      email,
+      names,
+      surnames,
+      account_number as accountNumber
+      from user a
+      inner join user_type b
+      on a.id_user_type = b.id_user_type`,
+    );
+    res.json({ status: 'success', msg: 'Usuarios obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener usuarios' });
+  }
 });
 
 /**
@@ -39,29 +37,27 @@ router.get('/', auth.getToken, auth.verify(1), (req, res) => {
  * @route GET /api/user/:from/:to
  * @permissions admin
  */
-router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) => {
-  db.query(
-    `select
-    id_user as idUser,
-    user_type as userType,
-    email,
-    names,
-    surnames,
-    account_number as accountNumber
-    from user a
-    inner join user_type b
-    on a.id_user_type = b.id_user_type
-    order by id_user asc
-    limit ?, ?`,
-    [req.params.from, req.params.to],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener usuarios' });
-      } else {
-        res.json({ status: 'success', msg: 'Usuarios obtenidos', data: result });
-      }
-    }
-  );
+router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      id_user as idUser,
+      user_type as userType,
+      email,
+      names,
+      surnames,
+      account_number as accountNumber
+      from user a
+      inner join user_type b
+      on a.id_user_type = b.id_user_type
+      order by id_user asc
+      limit ?, ?`,
+      [req.params.from, req.params.to],
+    );
+    res.json({ status: 'success', msg: 'Usuarios obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener usuarios' });
+  }
 });
 
 /**
@@ -72,28 +68,22 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
  * @body {string} surnames
  * @body {string} email
  */
-router.put('/', auth.getToken, auth.verifyAny, (req, res) => {
+router.put('/', auth.getToken, auth.verifyAny, async (req, res) => {
   const { email, names, surnames } = req.body;
 
   if (!regex.email.test(email)) {
     return res.json({ status: 'error', msg: 'Correo no valido' });
   }
 
-  db.query(
-    `update user set
-    email = ?,
-    names = ?,
-    surnames = ?
-    where id_user = ?`,
-    [email.trim().toLowerCase(), names, surnames, req.data.user.idUser],
-    (error) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar usuario, correo ya existe.' });
-      } else {
-        res.json({ status: 'success', msg: 'Usuario modificado' });
-      }
-    }
-  );
+  try {
+    await db.query(
+      'update user set email = ?, names = ?, surnames = ? where id_user = ?',
+      [email.trim().toLowerCase(), names, surnames, req.data.user.idUser],
+    );
+    res.json({ status: 'success', msg: 'Usuario modificado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al modificar usuario, correo ya existe.' });
+  }
 });
 
 /**
@@ -102,29 +92,28 @@ router.put('/', auth.getToken, auth.verifyAny, (req, res) => {
  * @permissions user
  * @body {string} password
  */
-router.put('/pw', auth.getToken, auth.verifyAny, (req, res) => {
+router.put('/pw', auth.getToken, auth.verifyAny, async (req, res) => {
   const { password } = req.body;
 
   if (!regex.password.test(password)) {
     return res.json({ status: 'error', msg: 'Clave no valida' });
   }
 
-  bcrypt.hash(password, Number(process.env.BCRYPT_SALT), (hashErr, hash) => {
-    if (hashErr) {
-      return res.json({ status: 'error', msg: 'Error bcryptjs' });
-    }
-    db.query(
-      'update user set password = ? where id_user = ?',
-      [hash, req.data.user.idUser],
-      (error) => {
-        if (error) {
-          res.json({ status: 'error', msg: 'Error al modificar clave' });
-        } else {
-          res.json({ status: 'success', msg: 'Clave modificada' });
-        }
-      }
-    );
-  });
+  // hash password
+  let hash;
+  try {
+    hash = bcrypt.hashSync(password, Number(process.env.BCRYPT_SALT));
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error bcryptjs' });
+  }
+
+  // update password
+  try {
+    await db.query('update user set password = ? where id_user = ?', [hash, req.data.user.idUser]);
+    res.json({ status: 'success', msg: 'Clave modificada' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al modificar clave' });
+  }
 });
 
 /**
@@ -132,14 +121,13 @@ router.put('/pw', auth.getToken, auth.verifyAny, (req, res) => {
  * @route DELETE /api/user/:idUser
  * @permissions admin
  */
-router.delete('/:idUser', auth.getToken, auth.verify(1), (req, res) => {
-  db.query('delete from user where id_user != 1 and id_user = ?', [req.params.idUser], (error) => {
-    if (error) {
-      res.json({ status: 'error', msg: 'Error al eliminar usuario' });
-    } else {
-      res.json({ status: 'success', msg: 'Usuario eliminado' });
-    }
-  });
+router.delete('/:idUser', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    await db.query('delete from user where id_user != 1 and id_user = ?', [req.params.idUser]);
+    res.json({ status: 'success', msg: 'Usuario eliminado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al eliminar usuario' });
+  }
 });
 
 module.exports = router;

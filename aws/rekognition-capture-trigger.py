@@ -37,7 +37,9 @@ def lambda_handler(event, context):
                 accountNumber = face['Item']['AccountNumber']['S']
                 if match['Face']['Confidence'] >= 90:
                     # There is a sure match, mark attendance and stop looking for faces
-                    data = urllib.urlencode({})
+                    data = urllib.urlencode({
+                        'captureKey': key
+                    })
                     host = 'http://ec2-3-86-140-112.compute-1.amazonaws.com'
                     url = host + '/api/attendance/{}/mark-account-num/{}'.format(idAttendanceLog, accountNumber)
                     req = urllib2.Request(url, data)

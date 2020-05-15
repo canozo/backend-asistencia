@@ -21,88 +21,85 @@ auth.getToken = (req, res, next) => {
   }
 };
 
-auth.signToken = (req, res, next) => {
-  // TODO:
-  jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' }, (err, token) => {
-  // jwt.sign({ user: req.user }, process.env.JWT_SALT, (err, token) => {
+auth.signToken = async (req, res, next) => {
+  try {
+    const token = jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' });
     req.iat = Math.floor(Date.now() / 1000);
-    if (err) {
-      res.json({ status: 'error', msg: 'Error jsonwebtoken' });
-    } else {
-      req.token = token;
-      next();
-    }
-  });
-};
-
-auth.verify = (...permisions) => {
-  return (req, res, next) => {
-    jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
-      if (err) {
-        res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-      } else if (!permisions.includes(data.user.idUserType)) {
-        res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
-      } else {
-        req.data = data;
-        next();
-      }
-    });
+    req.token = token;
+    next();
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error jsonwebtoken' });
   }
 };
 
-auth.verifyAny = (req, res, next) => {
-  jwt.verify(req.token, process.env.JWT_SALT, (err, data) => {
-    if (err) {
-      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
-    } else {
+auth.verify = (...permisions) => {
+  return async (req, res, next) => {
+    try {
+      const data = jwt.verify(req.token, process.env.JWT_SALT);
+      if (!permisions.includes(data.user.idUserType)) {
+        return res.json({ status: 'error', msg: 'Usuario no tiene permisos' });
+      }
       req.data = data;
       next();
+    } catch {
+      res.json({ status: 'error', msg: 'Token de verificacion no valido' });
     }
-  });
+  }
 };
 
-auth.getUser = (req, res, next) => {
+auth.verifyAny = async (req, res, next) => {
+  try {
+    const data = jwt.verify(req.token, process.env.JWT_SALT);
+    req.data = data;
+    next();
+  } catch {
+    res.json({ status: 'error', msg: 'Token de verificacion no valido' });
+  }
+};
+
+auth.getUser = async (req, res, next) => {
   const { email, password } = req.body;
 
-  db.query(
-    `select id_user, a.id_user_type as id_user_type, b.alias as user_type, names, surnames, email, password, account_number
-    from user a
-    inner join user_type b
-    on a.id_user_type = b.id_user_type
-    where email = ?`,
-    [email.trim().toLowerCase(), password],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error MySQL' });
-      } else if (result.length !== 1) {
-        res.json({ status: 'error', msg: `No se encontro al usuario con correo ${email}` });
-      } else {
-        // verify that the passwords are the same
-        bcrypt.compare(password, result[0].password, (err, match) => {
-          if (err) {
-            res.json({ status: 'error', msg: 'Error bcryptjs' });
-          } else if (!match) {
-            res.json({ status: 'error', msg: 'Clave incorrecta' });
-          } else {
-            // info that is stored into token
-            req.user = {
-              idUser: result[0].id_user,
-              idUserType: result[0].id_user_type,
-              userType: result[0].user_type,
-              names: result[0].names,
-              surnames: result[0].surnames,
-              email: result[0].email,
-              accountNumber: result[0].account_number,
-            };
-            next();
-          }
-        });
-      }
-    },
-  );
+  let result;
+  try {
+    result = await db.query(
+      `select id_user, a.id_user_type as id_user_type, b.alias as user_type, names, surnames, email, password, account_number
+      from user a
+      inner join user_type b
+      on a.id_user_type = b.id_user_type
+      where email = ?`,
+      [email.trim().toLowerCase(), password],
+    );
+    if (result.length !== 1) {
+      return res.json({ status: 'error', msg: `No se encontro al usuario con correo ${email}` });
+    }
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error buscando usuario' });
+  }
+
+  // verify that the passwords are the same
+  try {
+    const match = bcrypt.compareSync(password, result[0].password);
+    if (!match) {
+      return res.json({ status: 'error', msg: 'Clave incorrecta' });
+    }
+    // info that is stored into token
+    req.user = {
+      idUser: result[0].id_user,
+      idUserType: result[0].id_user_type,
+      userType: result[0].user_type,
+      names: result[0].names,
+      surnames: result[0].surnames,
+      email: result[0].email,
+      accountNumber: result[0].account_number,
+    };
+    next();
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al comprobar contraseña' });
+  }
 };
 
-auth.register = (req, res, next) => {
+auth.register = async (req, res, next) => {
   const { idUserType, names, surnames, email, password, accountNumber } = req.body;
 
   if (!regex.email.test(email)) {
@@ -117,25 +114,25 @@ auth.register = (req, res, next) => {
     return res.json({ status: 'error', msg: 'Número de cuenta no valido' });
   }
 
-  bcrypt.hash(password, Number(process.env.BCRYPT_SALT), (hashErr, hash) => {
-    if (hashErr) {
-      return res.json({ status: 'error', msg: 'Error bcryptjs' });
-    }
-    db.query(
+  let hash;
+  try {
+    hash = bcrypt.hash(password, Number(process.env.BCRYPT_SALT));
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error encriptando contraseña' });
+  }
+
+  try {
+    await db.query(
       `insert into user
       (id_user_type, names, surnames, email, password, account_number)
       values
       (?, ?, ?, ?, ?, ?)`,
       [idUserType, names, surnames, email.trim().toLowerCase(), hash, accountNumber],
-      (error) => {
-        if (error) {
-          res.json({ status: 'error', msg: 'Error al registrar usuario' });
-        } else {
-          next();
-        }
-      }
     );
-  });
+    next();
+  } catch {
+    res.json({ status: 'error', msg: 'Error al registrar usuario' });
+  }
 };
 
 module.exports = auth;

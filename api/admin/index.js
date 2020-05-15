@@ -13,15 +13,8 @@ const router = express.Router();
  * @body {string} email
  * @body {string} password
  */
-router.post(
-  '/',
-  auth.getToken,
-  auth.verify(1),
-  setUserType.admin,
-  auth.register,
-  (req, res) => {
-    res.json({ status: 'success', msg: 'Usuario de personal adm. registrado' });
-  },
-);
+router.post('/', auth.getToken, auth.verify(1), setUserType.admin, auth.register, (req, res) => {
+  res.json({ status: 'success', msg: 'Usuario de personal adm. registrado' });
+});
 
 module.exports = router;

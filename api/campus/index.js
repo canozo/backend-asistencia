@@ -8,17 +8,13 @@ const router = express.Router();
  * Get all the campuses
  * @route GET /api/campus
  */
-router.get('/', (req, res) => {
-  db.query(
-    'select id_campus as idCampus, campus, alias from campus',
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener campus' });
-      } else {
-        res.json({ status: 'success', msg: 'Campus obtenidos', data: result });
-      }
-    }
-  );
+router.get('/', async (req, res) => {
+  try {
+    const result = await db.query('select id_campus as idCampus, campus, alias from campus');
+    res.json({ status: 'success', msg: 'Campus obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener campus' });
+  }
 });
 
 /**
@@ -28,22 +24,17 @@ router.get('/', (req, res) => {
  * @body {string} campus
  * @body {string} alias
  */
-router.post('/', auth.getToken, auth.verify(1), (req, res) => {
+router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
   const { campus, alias } = req.body;
-  db.query(
-    `insert into campus
-    (id_created_by, campus, alias)
-    values
-    (?, ?, ?)`,
-    [req.data.user.idUser, campus, alias],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al crear campus' });
-      } else {
-        res.json({ status: 'success', msg: 'Campus creado', id: result.insertId });
-      }
-    }
-  );
+  try {
+    const result = await db.query(
+      'insert into campus (id_created_by, campus, alias) values (?, ?, ?)',
+      [req.data.user.idUser, campus, alias],
+    );
+    res.json({ status: 'success', msg: 'Campus creado', id: result.insertId });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al crear campus' });
+  }
 });
 
 /**
@@ -53,19 +44,17 @@ router.post('/', auth.getToken, auth.verify(1), (req, res) => {
  * @body {string} campus
  * @body {string} alias
  */
-router.put('/:idCampus', auth.getToken, auth.verify(1), (req, res) => {
+router.put('/:idCampus', auth.getToken, auth.verify(1), async (req, res) => {
   const { campus, alias } = req.body;
-  db.query(
-    'update campus set campus = ?, alias = ? where id_campus = ?',
-    [campus, alias, req.params.idCampus],
-    (error) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar campus' });
-      } else {
-        res.json({ status: 'success', msg: 'Campus modificado' });
-      }
-    }
-  );
+  try {
+    await db.query(
+      'update campus set campus = ?, alias = ? where id_campus = ?',
+      [campus, alias, req.params.idCampus],
+    );
+    res.json({ status: 'success', msg: 'Campus modificado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al modificar campus' });
+  }
 });
 
 /**
@@ -73,14 +62,13 @@ router.put('/:idCampus', auth.getToken, auth.verify(1), (req, res) => {
  * @route DELETE /api/campus/:idCampus
  * @permissions admin
  */
-router.delete('/:idCampus', auth.getToken, auth.verify(1), (req, res) => {
-  db.query('delete from campus where id_campus = ?', [req.params.idCampus], (error) => {
-    if (error) {
-      res.json({ status: 'error', msg: 'Error al eliminar campus' });
-    } else {
-      res.json({ status: 'success', msg: 'Campus eliminado' });
-    }
-  });
+router.delete('/:idCampus', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    await db.query('delete from campus where id_campus = ?', [req.params.idCampus]);
+    res.json({ status: 'success', msg: 'Campus eliminado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al eliminar campus' });
+  }
 });
 
 module.exports = router;

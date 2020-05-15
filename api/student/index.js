@@ -42,23 +42,15 @@ const upload = multer({
  * @route GET /api/student
  * @permissions admin
  */
-router.get('/', auth.getToken, auth.verify(1), (req, res) => {
-  db.query(
-    `select
-    id_user as idUser,
-    email,
-    names,
-    surnames
-    from user
-    where id_user_type = 3`,
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener estudiantes' });
-      } else {
-        res.json({ status: 'success', msg: 'Estudiantes obtenidos', data: result });
-      }
-    }
-  );
+router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      'select id_user as idUser, email, names, surnames from user where id_user_type = 3',
+    );
+    res.json({ status: 'success', msg: 'Estudiantes obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener estudiantes' });
+  }
 });
 
 /**
@@ -66,26 +58,20 @@ router.get('/', auth.getToken, auth.verify(1), (req, res) => {
  * @route GET /api/student/:from/:to
  * @permissions admin
  */
-router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) => {
-  db.query(
-    `select
-    id_user as idUser,
-    email,
-    names,
-    surnames
-    from user
-    where id_user_type = 3
-    order by id_user asc
-    limit ?, ?`,
-    [req.params.from, req.params.to],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener estudiantes' });
-      } else {
-        res.json({ status: 'success', msg: 'Estudiantes obtenidos', data: result });
-      }
-    }
-  );
+router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, res) => {
+  try {
+    const result = await db.query(
+      `select id_user as idUser, email, names, surnames
+      from user
+      where id_user_type = 3
+      order by id_user asc
+      limit ?, ?`,
+      [req.params.from, req.params.to],
+    );
+    res.json({status: 'success', msg: 'Estudiantes obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener estudiantes' });
+  }
 });
 
 /**
@@ -94,37 +80,35 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, (req, res) =
  * @permissions student
  * @changed
  */
-router.get('/attendance', auth.getToken, auth.verify(3), (req, res) => {
-  db.query(
-    `select
-    section.id_section as idSection,
-    al.id_attendance_log as idLog,
-    id_professor as idProfessor,
-    id_marked_by as idMarkedBy,
-    marked_at as markedAt,
-    class as className,
-    code as classCode
-    from attendance_log al
-    inner join section
-    on al.id_section = section.id_section
-    inner join class
-    on section.id_class = class.id_class
-    inner join section_x_student sxs
-    on section.id_section = sxs.id_section
-    inner join user
-    on user.id_user = sxs.id_student
-    left join attendance_x_student axs
-    on al.id_attendance_log = axs.id_attendance_log
-    where user.id_user = ?`,
-    [req.data.user.idUser],
-    (error, result) => {
-      if (error) {
-        return res.json({ status: 'error', msg: 'Error al obtener historial de asistencia' });
-      }
-
-      res.json({ status: 'success', msg: 'Historial de asistencia obtenido', data: result });
-    }
-  );
+router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      section.id_section as idSection,
+      al.id_attendance_log as idLog,
+      id_professor as idProfessor,
+      id_marked_by as idMarkedBy,
+      marked_at as markedAt,
+      class as className,
+      code as classCode
+      from attendance_log al
+      inner join section
+      on al.id_section = section.id_section
+      inner join class
+      on section.id_class = class.id_class
+      inner join section_x_student sxs
+      on section.id_section = sxs.id_section
+      inner join user
+      on user.id_user = sxs.id_student
+      left join attendance_x_student axs
+      on al.id_attendance_log = axs.id_attendance_log
+      where user.id_user = ?`,
+      [req.data.user.idUser],
+    );
+    res.json({ status: 'success', msg: 'Historial de asistencia obtenido', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener historial de asistencia' });
+  }
 });
 
 /**
@@ -133,39 +117,41 @@ router.get('/attendance', auth.getToken, auth.verify(3), (req, res) => {
  * @permissions student
  * @changed
  */
-router.get('/faces', auth.getToken, auth.verify(3), (req, res) => {
-  db.query(
-    'select account_number as accountNumber from user where id_user = ?',
-    [req.data.user.idUser],
-    (error, result) => {
-      if (error) {
-        return res.json({ status: 'error', msg: 'Error al obtener número de cuenta' });
-      }
+router.get('/faces', auth.getToken, auth.verify(3), async (req, res) => {
+  // get student account number
+  let accountNumber;
+  try {
+    const result = await db.query(
+      'select account_number as accountNumber from user where id_user = ?',
+      [req.data.user.idUser],
+    );
+    accountNumber = result[0].accountNumber;
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error al obtener número de cuenta' });
+  }
 
-      const dynamodb = new AWS.DynamoDB({
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
-        region: process.env.MAIN_REGION,
-      });
+  // get face ids
+  const dynamodb = new AWS.DynamoDB({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
+    region: process.env.MAIN_REGION,
+  });
 
-      const { accountNumber } = result[0];
-      const params = {
-        TableName: 'students_collection',
-        FilterExpression: 'AccountNumber = :accountNumber',
-        ExpressionAttributeValues: {
-          ':accountNumber': { S: String(accountNumber) }
-        }
-      };
+  const params = {
+    TableName: 'students_collection',
+    FilterExpression: 'AccountNumber = :accountNumber',
+    ExpressionAttributeValues: {
+      ':accountNumber': { S: String(accountNumber) }
+    },
+  };
 
-      dynamodb.scan(params, (error, result) => {
-        if (error) {
-          return res.json({ status: 'error', msg: 'Error al obtener identificadores de rostros' });
-        }
-        const data = result.Items.map(item => item.RekognitionId.S);
-        return res.json({ status: 'success', msg: 'Identificadores obtenidos!', data });
-      });
-    }
-  );
+  try {
+    const result = await dynamodb.scan(params).promise();
+    const data = result.Items.map(item => item.RekognitionId.S);
+    res.json({ status: 'success', msg: 'Identificadores obtenidos', data });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener identificadores de rostros' });
+  }
 });
 
 /**
@@ -173,54 +159,52 @@ router.get('/faces', auth.getToken, auth.verify(3), (req, res) => {
  * @route GET /api/student/enrolled
  * @changed
  */
-router.get('/enrolled', auth.getToken, auth.verify(3), (req, res) => {
-  db.query(
-    `select
-    section.id_section as idSection,
-    class.code as classCode,
-    class.class as class,
-    section.comments as comments,
-    a.schedule_time as startTime,
-    b.schedule_time as finishTime,
-    classroom.alias as classroom,
-    building.alias as building,
-    concat_ws(' ', prof.names, prof.surnames) as professor,
-    semester.alias as semester,
-    group_concat(d.alias order by d.id_schedule_day separator '') as days
-    from section
-    inner join semester
-    on section.id_semester = semester.id_semester
-    inner join class
-    on section.id_class = class.id_class
-    inner join classroom
-    on section.id_classroom = classroom.id_classroom
-    inner join building
-    on classroom.id_building = building.id_building
-    inner join schedule_time a
-    on section.id_start_time = a.id_schedule_time
-    inner join schedule_time b
-    on section.id_finish_time = b.id_schedule_time
-    inner join user prof
-    on section.id_professor = prof.id_user
-    inner join section_x_schedule_day c
-    on section.id_section = c.id_section
-    inner join schedule_day d
-    on c.id_schedule_day = d.id_schedule_day
-    inner join section_x_student
-    on section_x_student.id_section = section.id_section
-    inner join user student
-    on student.id_user = section_x_student.id_student
-    where semester.active = 1 and student.id_user = ?
-    group by section.id_section`,
-    [req.data.user.idUser],
-    (error, result) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al obtener secciones' });
-      } else {
-        res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
-      }
-    }
-  );
+router.get('/enrolled', auth.getToken, auth.verify(3), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      section.id_section as idSection,
+      class.code as classCode,
+      class.class as class,
+      section.comments as comments,
+      a.schedule_time as startTime,
+      b.schedule_time as finishTime,
+      classroom.alias as classroom,
+      building.alias as building,
+      concat_ws(' ', prof.names, prof.surnames) as professor,
+      semester.alias as semester,
+      group_concat(d.alias order by d.id_schedule_day separator '') as days
+      from section
+      inner join semester
+      on section.id_semester = semester.id_semester
+      inner join class
+      on section.id_class = class.id_class
+      inner join classroom
+      on section.id_classroom = classroom.id_classroom
+      inner join building
+      on classroom.id_building = building.id_building
+      inner join schedule_time a
+      on section.id_start_time = a.id_schedule_time
+      inner join schedule_time b
+      on section.id_finish_time = b.id_schedule_time
+      inner join user prof
+      on section.id_professor = prof.id_user
+      inner join section_x_schedule_day c
+      on section.id_section = c.id_section
+      inner join schedule_day d
+      on c.id_schedule_day = d.id_schedule_day
+      inner join section_x_student
+      on section_x_student.id_section = section.id_section
+      inner join user student
+      on student.id_user = section_x_student.id_student
+      where semester.active = 1 and student.id_user = ?
+      group by section.id_section`,
+      [req.data.user.idUser],
+    );
+    res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener secciones' });
+  }
 });
 
 /**
@@ -233,16 +217,9 @@ router.get('/enrolled', auth.getToken, auth.verify(3), (req, res) => {
  * @body {string} password
  * @body {string} accountNumber
  */
-router.post(
-  '/',
-  auth.getToken,
-  auth.verify(1),
-  setUserType.student,
-  auth.register,
-  (req, res) => {
-    res.json({ status: 'success', msg: 'Usuario de estudiante registrado' });
-  },
-);
+router.post('/', auth.getToken, auth.verify(1), setUserType.student, auth.register, (req, res) => {
+  res.json({ status: 'success', msg: 'Usuario de estudiante registrado' });
+});
 
 /**
  * Self register a student
@@ -270,21 +247,20 @@ router.post(
  * @permissions admin
  * @body {string} accountNumber
  */
-router.put('/:idStudent', auth.getToken, auth.verify(1), (req, res) => {
+router.put('/:idStudent', auth.getToken, auth.verify(1), async (req, res) => {
   if (!regex.accountNum.test(req.body.accountNumber)) {
     return res.json({ status: 'error', msg: 'Número de cuenta no valido' });
   }
-  db.query(
-    'update user set accountNumber = ? where id_user = ?',
-    [req.body.accountNumber, req.params.idStudent],
-    (error) => {
-      if (error) {
-        res.json({ status: 'error', msg: 'Error al modificar número de cuenta' });
-      } else {
-        res.json({ status: 'success', msg: 'Número de cuenta modificado' });
-      }
-    }
-  );
+
+  try {
+    await db.query(
+      'update user set accountNumber = ? where id_user = ?',
+      [req.body.accountNumber, req.params.idStudent],
+    );
+    res.json({ status: 'success', msg: 'Número de cuenta modificado' });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al modificar número de cuenta' });
+  }
 });
 
 /**
@@ -292,52 +268,57 @@ router.put('/:idStudent', auth.getToken, auth.verify(1), (req, res) => {
  * @route POST /api/student/upload
  * @permissions student
  */
-router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), (req, res) => {
+router.post('/upload', auth.getToken, auth.verify(3), upload.single('face'), async (req, res) => {
   if (!req.file) {
-    return res.json({ status: 'error', msg: 'Error, el archivo no fue definido' })
+    return res.status(500).json({ status: 'error', msg: 'Error, el archivo no fue definido' })
   }
 
-  db.query(
-    'select account_number as accountNumber from user where id_user = ?',
-    [req.data.user.idUser],
-    (error, result) => {
-      if (error) {
-        return res.json({ status: 'error', msg: 'Error al obtener número de cuenta' });
-      }
+  // get student account number
+  let accountNumber;
+  try {
+    const result = await db.query(
+      'select account_number as accountNumber from user where id_user = ?',
+      [req.data.user.idUser],
+    );
+    accountNumber = result[0].accountNumber;
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error al obtener número de cuenta' });
+  }
 
-      const { accountNumber } = result[0];
-      fs.readFile(req.file.path, (err, data) => {
-        if (err) {
-          return res.status(500).json({ status: 'error', msg: 'Error leyendo archivo de imagen' });
-        }
+  // read image file
+  let data;
+  try {
+    data = fs.readFileSync(req.file.path);
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error leyendo archivo de imagen' });
+  }
 
-        const s3 = new AWS.S3({
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
-        });
+  // upload to s3
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
+  });
 
-        s3.upload({
-          Bucket: process.env.MAIN_BUCKET,
-          Key: `index/${req.file.filename}`,
-          Metadata: { AccountNumber: accountNumber },
-          Body: data,
-        }, (s3err, s3data) => {
-          if (s3err) {
-            return res.status(500).json({ status: 'error', msg: 'Error cargando archivo a S3' });
-          }
+  try {
+    await s3.upload({
+      Bucket: process.env.MAIN_BUCKET,
+      Key: `index/${req.file.filename}`,
+      Metadata: { AccountNumber: accountNumber },
+      Body: data,
+    }).promise();
+  } catch {
+    return res.status(500).json({ status: 'error', msg: 'Error cargando archivo a S3' });
+  }
 
-          const deletePath = path.join(__dirname, '..', '..', 'tmp', 'faces', req.file.filename);
-          fs.unlink(deletePath, (err) => {
-            if (err) {
-              console.log('Error eliminando imagen del servidor: ', err);
-            }
-          });
+  // delete image from this server
+  const deletePath = path.join(__dirname, '..', '..', 'tmp', 'faces', req.file.filename);
+  try {
+    fs.unlinkSync(deletePath);
+  } catch {
+    console.log('Error eliminando imagen del servidor: ', err);
+  }
 
-          res.json({ status: 'success', msg: 'Imagen cargada' });
-        });
-      });
-    }
-  );
+  res.json({ status: 'success', msg: 'Imagen de rostro cargada' });
 });
 
 module.exports = router;
