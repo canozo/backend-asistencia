@@ -21,7 +21,7 @@ auth.getToken = (req, res, next) => {
   }
 };
 
-auth.signToken = async (req, res, next) => {
+auth.signToken = (req, res, next) => {
   try {
     const token = jwt.sign({ user: req.user }, process.env.JWT_SALT, { expiresIn: '90m' });
     req.iat = Math.floor(Date.now() / 1000);
@@ -33,7 +33,7 @@ auth.signToken = async (req, res, next) => {
 };
 
 auth.verify = (...permisions) => {
-  return async (req, res, next) => {
+  return (req, res, next) => {
     try {
       const data = jwt.verify(req.token, process.env.JWT_SALT);
       if (!permisions.includes(data.user.idUserType)) {
@@ -47,7 +47,7 @@ auth.verify = (...permisions) => {
   }
 };
 
-auth.verifyAny = async (req, res, next) => {
+auth.verifyAny = (req, res, next) => {
   try {
     const data = jwt.verify(req.token, process.env.JWT_SALT);
     req.data = data;
