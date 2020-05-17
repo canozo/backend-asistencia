@@ -53,6 +53,66 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Get all sections with extra data
+ * @route GET /api/section/extra
+ * @permissions admin
+ * @changed
+ */
+router.get('/extra', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      section.id_section as idSection,
+      section.comments as comments,
+      class.id_class as idClass,
+      class.code as classCode,
+      class.class as class,
+      a.id_schedule_time as idStartTime,
+      a.schedule_time as startTime,
+      b.id_schedule_time as idFinishTime,
+      b.schedule_time as finishTime,
+      campus.id_campus as idCampus,
+      campus.campus as campus,
+      classroom.id_classroom as idClassroom,
+      classroom.alias as classroom,
+      building.id_building as idBuilding,
+      building.alias as building,
+      user.id_user as idProfessor,
+      concat_ws(' ', user.names, user.surnames) as professor,
+      semester.id_semester as idSemester,
+      semester.alias as semester,
+      group_concat(d.alias order by d.id_schedule_day separator '') as days
+      from section
+      inner join semester
+      on section.id_semester = semester.id_semester
+      inner join class
+      on section.id_class = class.id_class
+      inner join classroom
+      on section.id_classroom = classroom.id_classroom
+      inner join building
+      on classroom.id_building = building.id_building
+      inner join campus
+      on building.id_campus = campus.id_campus
+      inner join schedule_time a
+      on section.id_start_time = a.id_schedule_time
+      inner join schedule_time b
+      on section.id_finish_time = b.id_schedule_time
+      inner join user
+      on section.id_professor = user.id_user
+      inner join section_x_schedule_day c
+      on section.id_section = c.id_section
+      inner join schedule_day d
+      on c.id_schedule_day = d.id_schedule_day
+      where semester.active = 1
+      group by section.id_section`,
+    );
+    res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener secciones' });
+  }
+});
+
+/**
  * Get all sections data paginated
  * @route GET /api/section/:from/:to
  */
@@ -122,7 +182,7 @@ router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
     req.body.idFinishTime,
   ];
   try {
-    db.query(
+    const result = await db.query(
       `insert into section (
         id_semester,
         id_class,

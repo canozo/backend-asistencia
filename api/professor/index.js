@@ -23,6 +23,24 @@ router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
 });
 
 /**
+ * Get all professors for a select
+ * @route GET /api/professor/select
+ * @permissions admin
+ * @changed
+ */
+router.get('/select', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select id_user as id, concat_ws(' ', names, surnames) as val
+      from user where id_user_type = 2`,
+    );
+    res.json({ status: 'success', msg: 'Profesores obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener profesores' });
+  }
+});
+
+/**
  * Get professors paginated
  * @route GET /api/professor/:from/:to
  * @permissions admin

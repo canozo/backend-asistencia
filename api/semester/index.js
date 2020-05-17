@@ -19,6 +19,25 @@ router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
 });
 
 /**
+ * Get all semesters for a select
+ * @route GET /api/semester/select
+ * @permissions admin
+ */
+router.get('/select', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      id_semester as id,
+      concat(alias, ', ', if(active, 'activo', 'inactivo')) as val
+      from semester`,
+    );
+    res.json({ status: 'success', msg: 'Semestres obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener semestres' });
+  }
+});
+
+/**
  * Create a new semester
  * @route POST /api/semester
  * @permissions admin

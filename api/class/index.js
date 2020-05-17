@@ -21,6 +21,22 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Get all the classes for a select
+ * @route GET /api/class/select
+ * @changed
+ */
+router.get('/select', async (req, res) => {
+  try {
+    const result = await db.query(
+      `select id_class as id, concat_ws(' - ', code, class) as val from class`,
+    );
+    res.json({ status: 'success', msg: 'Clases obtenidas', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener clases' });
+  }
+});
+
+/**
  * Get classes paginated
  * @route GET /api/class/:from/:to
  */

@@ -20,6 +20,22 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Get all time schedule data for a select
+ * @route GET /api/schedule/select
+ * @changed
+ */
+router.get('/select', async (req, res) => {
+  try {
+    const result = await db.query(
+      'select id_schedule_time as id, schedule_time as val from schedule_time',
+    );
+    res.json({ status: 'success', msg: 'Horarios obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener horarios' });
+  }
+});
+
+/**
  * Create a new time schedule
  * @route POST /api/schedule
  * @permissions admin

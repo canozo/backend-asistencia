@@ -32,13 +32,15 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Get list of all classrooms in a specific building
- * @route GET /api/classroom/:idBuilding
+ * Get list of all classrooms in a building for a select
+ * @route GET /api/classroom/select/:idBuilding
+ * @changed
  */
-router.get('/:idBuilding', async (req, res) => {
+router.get('/select/:idBuilding', async (req, res) => {
   try {
     const result = await db.query(
-      'select id_classroom as idClassroom, capacity, alias from classroom where id_building = ?',
+      `select id_classroom as id, concat('Aula: ', alias, ', capacidad: ', capacity) as val
+      from classroom where id_building = ?`,
       [req.params.idBuilding],
     );
     res.json({ status: 'success', msg: 'Aulas obtenidas', data: result });
