@@ -11,10 +11,22 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const result = await db.query(
-      'select id_classroom as idClassroom, capacity, alias from classroom'
+      `select
+      id_classroom as idClassroom,
+      campus.id_campus as idCampus,
+      campus.campus as campus,
+      building.id_building as idBuilding,
+      building.alias as building,
+      capacity,
+      classroom.alias as alias
+      from classroom
+      inner join building
+      on classroom.id_building = building.id_building
+      inner join campus
+      on building.id_campus = campus.id_campus`
     );
     res.json({ status: 'success', msg: 'Aulas obtenidas', data: result });
-  } catch {
+  } catch (err) {
     res.status(500).json({ status: 'error', msg: 'Error al obtener aulas' });
   }
 });

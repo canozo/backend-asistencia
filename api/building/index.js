@@ -24,14 +24,14 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Get all buildings in a specific campus
- * @route GET /api/building/in/:idCampus
+ * Get all buildings in a campus for a select
+ * @route GET /api/building/select/:idCampus
  * @changed
  */
-router.get('/in/:idCampus', async (req, res) => {
+router.get('/select/:idCampus', async (req, res) => {
   try {
     const result = await db.query(
-      'select id_building as idBuilding, alias from building where id_campus = ?',
+      'select id_building as id, alias as val from building where id_campus = ?',
       [req.params.idCampus],
     );
     res.json({ status: 'success', msg: 'Edificios obtenidos', data: result });
