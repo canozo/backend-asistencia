@@ -45,7 +45,8 @@ const upload = multer({
 router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
   try {
     const result = await db.query(
-      'select id_user as idUser, email, names, surnames from user where id_user_type = 3',
+      `select id_user as idUser, email, names, surnames, account_number as accountNumber
+      from user where id_user_type = 3`,
     );
     res.json({ status: 'success', msg: 'Estudiantes obtenidos', data: result });
   } catch {
@@ -218,7 +219,7 @@ router.get('/enrolled', auth.getToken, auth.verify(3), async (req, res) => {
  * @body {string} accountNumber
  */
 router.post('/', auth.getToken, auth.verify(1), setUserType.student, auth.register, (req, res) => {
-  res.json({ status: 'success', msg: 'Usuario de estudiante registrado' });
+  res.json({ status: 'success', msg: 'Usuario de estudiante registrado', id: req.idUser });
 });
 
 /**

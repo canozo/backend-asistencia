@@ -116,19 +116,20 @@ auth.register = async (req, res, next) => {
 
   let hash;
   try {
-    hash = bcrypt.hash(password, Number(process.env.BCRYPT_SALT));
+    hash = bcrypt.hashSync(password, Number(process.env.BCRYPT_SALT));
   } catch {
     return res.status(500).json({ status: 'error', msg: 'Error encriptando contraseña' });
   }
 
   try {
-    await db.query(
+    const result = await db.query(
       `insert into user
       (id_user_type, names, surnames, email, password, account_number)
       values
       (?, ?, ?, ?, ?, ?)`,
       [idUserType, names, surnames, email.trim().toLowerCase(), hash, accountNumber],
     );
+    req.idUser = result.insertId;
     next();
   } catch {
     res.json({ status: 'error', msg: 'Error al registrar usuario' });

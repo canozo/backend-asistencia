@@ -11,7 +11,9 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('select id_class as idClass, class, code, comments from class');
+    const result = await db.query(
+      'select id_class as idClass, class as className, code as classCode, comments from class',
+    );
     res.json({ status: 'success', msg: 'Clases obtenidas', data: result });
   } catch {
     res.status(500).json({ status: 'error', msg: 'Error al obtener clases' });
@@ -25,7 +27,7 @@ router.get('/', async (req, res) => {
 router.get('/:from/:to', pagination, async (req, res) => {
   try {
     const result = await db.query(
-      `select id_class as idClass, class, code, comments
+      `select id_class as idClass, class as className, code as classCode, comments
       from class
       order by id_class asc
       limit ?, ?`,
@@ -42,15 +44,16 @@ router.get('/:from/:to', pagination, async (req, res) => {
  * @route POST /api/class
  * @permissions admin
  * @body {string} className
- * @body {string} code
+ * @body {string} classCode
  * @body {string | undefined} comments
+ * @changed
  */
 router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
-  const { className, code, comments } = req.body;
+  const { className, classCode, comments } = req.body;
   try {
     const result = await db.query(
       'insert into class (id_created_by, class, code, comments) values (?, ?, ?, ?)',
-      [req.data.user.idUser, className, code, comments],
+      [req.data.user.idUser, className, classCode, comments],
     );
     res.json({ status: 'success', msg: 'Clase creada', id: result.insertId });
   } catch {
@@ -63,15 +66,16 @@ router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
  * @route PUT /api/class/:idClass
  * @permissions admin
  * @body {string} className
- * @body {string} code
+ * @body {string} classCode
  * @body {string | undefined} comments
+ * @changed
  */
 router.put('/:idClass', auth.getToken, auth.verify(1), async (req, res) => {
-  const { className, code, comments } = req.body;
+  const { className, classCode, comments } = req.body;
   try {
     await db.query(
       'update class set class = ?, code = ?, comments = ? where id_class = ?',
-      [className, code, comments, req.params.idClass],
+      [className, classCode, comments, req.params.idClass],
     );
     res.json({ status: 'success', msg: 'Clase modificada' });
   } catch {

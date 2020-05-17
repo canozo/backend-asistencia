@@ -53,7 +53,7 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, 
  * @body {string} password
  */
 router.post('/', auth.getToken, auth.verify(1), setUserType.camera, auth.register, (req, res) => {
-  res.json({ status: 'success', msg: 'Usuario de camara registrado' });
+  res.json({ status: 'success', msg: 'Usuario de camara registrado', id: req.idUser });
 });
 
 module.exports = router;

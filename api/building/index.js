@@ -10,7 +10,13 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('select id_building as idBuilding, alias from building');
+    const result = await db.query(
+      `select
+      id_building as idBuilding, campus.id_campus as idCampus, campus, building.alias as alias
+      from building
+      inner join campus
+      on campus.id_campus = building.id_campus`
+    );
     res.json({ status: 'success', msg: 'Edificios obtenidos', data: result });
   } catch {
     res.status(500).json({ status: 'error', msg: 'Error al obtener edificios' });
@@ -19,9 +25,10 @@ router.get('/', async (req, res) => {
 
 /**
  * Get all buildings in a specific campus
- * @route GET /api/building/:idCampus
+ * @route GET /api/building/in/:idCampus
+ * @changed
  */
-router.get('/:idCampus', async (req, res) => {
+router.get('/in/:idCampus', async (req, res) => {
   try {
     const result = await db.query(
       'select id_building as idBuilding, alias from building where id_campus = ?',

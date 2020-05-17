@@ -18,6 +18,20 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Get all the campuses for a select
+ * @route GET /api/campus/select
+ * @changed
+ */
+router.get('/select', async (req, res) => {
+  try {
+    const result = await db.query('select id_campus as id, campus as val from campus');
+    res.json({ status: 'success', msg: 'Campus obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener campus' });
+  }
+});
+
+/**
  * Create a new campus
  * @route POST /api/campus
  * @permissions admin

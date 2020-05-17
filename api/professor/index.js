@@ -107,7 +107,7 @@ router.post(
   setUserType.professor,
   auth.register,
   (req, res) => {
-    res.json({ status: 'success', msg: 'Usuario de profesor registrado' });
+    res.json({ status: 'success', msg: 'Usuario de profesor registrado', id: req.idUser });
   },
 );
 
