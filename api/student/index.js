@@ -91,7 +91,8 @@ router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
       id_marked_by as idMarkedBy,
       marked_at as markedAt,
       class as className,
-      code as classCode
+      code as classCode,
+      al.opened_at as openedAt
       from attendance_log al
       inner join section
       on al.id_section = section.id_section
