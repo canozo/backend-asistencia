@@ -55,27 +55,6 @@ router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
 });
 
 /**
- * Get students paginated
- * @route GET /api/student/:from/:to
- * @permissions admin
- */
-router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, res) => {
-  try {
-    const result = await db.query(
-      `select id_user as idUser, email, names, surnames
-      from user
-      where id_user_type = 3
-      order by id_user asc
-      limit ?, ?`,
-      [req.params.from, req.params.to],
-    );
-    res.json({status: 'success', msg: 'Estudiantes obtenidos', data: result });
-  } catch {
-    res.status(500).json({ status: 'error', msg: 'Error al obtener estudiantes' });
-  }
-});
-
-/**
  * Get student attendance history
  * @route GET /api/student/attendance
  * @permissions student
@@ -155,8 +134,40 @@ router.get('/faces', auth.getToken, auth.verify(3), async (req, res) => {
 });
 
 /**
+ * Get all sections enrolled by the student for select
+ * @route GET /api/student/select/:idStudent
+ * @permissions admin
+ */
+router.get('/select/:idStudent', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      s.id_section as id,
+      concat_ws(' ', c.code, c.class, concat_ws('/', cr.alias, b.alias)) as val
+      from section s
+      inner join class c
+      on s.id_class = c.id_class
+      inner join classroom cr
+      on s.id_classroom = cr.id_classroom
+      inner join building b
+      on cr.id_building = b.id_building
+      inner join section_x_student sxs
+      on sxs.id_section = s.id_section
+      inner join user student
+      on student.id_user = sxs.id_student
+      where student.id_user = ?`,
+      [req.params.idStudent],
+    );
+    res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener secciones' });
+  }
+});
+
+/**
  * Get all sections enrolled by the student
  * @route GET /api/student/enrolled
+ * @permissions student
  */
 router.get('/enrolled', auth.getToken, auth.verify(3), async (req, res) => {
   try {

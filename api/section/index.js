@@ -53,6 +53,32 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Get all sections from a semester for a select
+ * @route GET /api/section/select/:idSemester
+ * @permissions admin
+ */
+router.get('/select/:idSemester', auth.getToken, auth.verify(1), async (req, res) => {
+  try {
+    const result = await db.query(
+      `select
+      id_section as id, concat_ws(' ', c.code, c.class, concat_ws('/', cr.alias, b.alias)) as val
+      from section s
+      inner join class c
+      on s.id_class = c.id_class
+      inner join classroom cr
+      on cr.id_classroom = s.id_classroom
+      inner join building b
+      on cr.id_building = b.id_building
+      where id_semester = ?`,
+      [req.params.idSemester],
+    );
+    res.json({ status: 'success', msg: 'Secciones obtenidos', data: result });
+  } catch {
+    res.status(500).json({ status: 'error', msg: 'Error al obtener secciones' });
+  }
+});
+
+/**
  * Get all sections with extra data
  * @route GET /api/section/extra
  * @permissions admin
