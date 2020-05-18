@@ -34,7 +34,6 @@ router.get('/', async (req, res) => {
 /**
  * Get list of all classrooms in a building for a select
  * @route GET /api/classroom/select/:idBuilding
- * @changed
  */
 router.get('/select/:idBuilding', async (req, res) => {
   try {

@@ -29,7 +29,6 @@ router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
  * Get attendance log history by this camera
  * @route GET /api/camera/marked
  * @permissions camera
- * @changed
  */
 router.get('/marked', auth.getToken, auth.verify(4), async (req, res) => {
   try {
@@ -65,7 +64,6 @@ router.get('/marked', auth.getToken, auth.verify(4), async (req, res) => {
  * Get capture key as image
  * @route GET /api/camera/capture/:key
  * @permissions camera
- * @changed
  */
 router.get('/capture/:key', auth.getToken, auth.verify(4), async (req, res) => {
   const s3 = new AWS.S3({

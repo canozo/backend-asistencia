@@ -23,7 +23,6 @@ router.get('/', async (req, res) => {
 /**
  * Get all the classes for a select
  * @route GET /api/class/select
- * @changed
  */
 router.get('/select', async (req, res) => {
   try {
@@ -62,7 +61,6 @@ router.get('/:from/:to', pagination, async (req, res) => {
  * @body {string} className
  * @body {string} classCode
  * @body {string | undefined} comments
- * @changed
  */
 router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
   const { className, classCode, comments } = req.body;
@@ -84,7 +82,6 @@ router.post('/', auth.getToken, auth.verify(1), async (req, res) => {
  * @body {string} className
  * @body {string} classCode
  * @body {string | undefined} comments
- * @changed
  */
 router.put('/:idClass', auth.getToken, auth.verify(1), async (req, res) => {
   const { className, classCode, comments } = req.body;

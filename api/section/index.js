@@ -56,7 +56,6 @@ router.get('/', async (req, res) => {
  * Get all sections with extra data
  * @route GET /api/section/extra
  * @permissions admin
- * @changed
  */
 router.get('/extra', auth.getToken, auth.verify(1), async (req, res) => {
   try {

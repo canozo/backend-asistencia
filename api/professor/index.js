@@ -26,7 +26,6 @@ router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
  * Get all professors for a select
  * @route GET /api/professor/select
  * @permissions admin
- * @changed
  */
 router.get('/select', auth.getToken, auth.verify(1), async (req, res) => {
   try {
@@ -64,7 +63,7 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, 
 /**
  * Get all sections given by the professor
  * @route GET /api/professor/enrolled
- * @changed
+ * @permissions professor
  */
 router.get('/enrolled', auth.getToken, auth.verify(2), async (req, res) => {
   try {

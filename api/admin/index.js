@@ -9,7 +9,6 @@ const router = express.Router();
  * Get all admin users
  * @route GET /api/admin
  * @permissions admin
- * @changed
  */
 router.get('/', auth.getToken, auth.verify(1), async (req, res) => {
   try {

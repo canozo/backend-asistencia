@@ -9,7 +9,6 @@ const router = express.Router();
  * Get open attendance logs by a professor, also used to verify if there is attendance open
  * @route GET /api/attendance
  * @permissions professor
- * @changed
  */
 router.get('/', auth.getToken, auth.verify(2), async (req, res) => {
   try {
@@ -191,7 +190,6 @@ router.post('/', auth.getToken, auth.verify(2), async (req, res) => {
  * @permissions professor
  * @permissions camera
  * @body {string} captureKey
- * @changed
  */
 router.post(
   '/:idAttendanceLog/mark/:idStudent',
@@ -236,7 +234,6 @@ router.post(
  * @permissions professor
  * @permissions camera
  * @body {string} captureKey
- * @changed
  */
 router.post(
   '/:idAttendanceLog/mark-account-num/:accountNumber',

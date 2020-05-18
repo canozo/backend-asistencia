@@ -79,7 +79,6 @@ router.get('/:from/:to', auth.getToken, auth.verify(1), pagination, async (req, 
  * Get student attendance history
  * @route GET /api/student/attendance
  * @permissions student
- * @changed
  */
 router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
   try {
@@ -117,7 +116,6 @@ router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
  * Get all registered face ids by a student
  * @route GET /api/student/faces
  * @permissions student
- * @changed
  */
 router.get('/faces', auth.getToken, auth.verify(3), async (req, res) => {
   // get student account number
@@ -159,7 +157,6 @@ router.get('/faces', auth.getToken, auth.verify(3), async (req, res) => {
 /**
  * Get all sections enrolled by the student
  * @route GET /api/student/enrolled
- * @changed
  */
 router.get('/enrolled', auth.getToken, auth.verify(3), async (req, res) => {
   try {

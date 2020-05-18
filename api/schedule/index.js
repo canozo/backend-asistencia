@@ -22,7 +22,6 @@ router.get('/', async (req, res) => {
 /**
  * Get all time schedule data for a select
  * @route GET /api/schedule/select
- * @changed
  */
 router.get('/select', async (req, res) => {
   try {
