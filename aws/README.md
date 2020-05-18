@@ -36,7 +36,7 @@ aws s3 mb s3://unitec-face-id --region us-east-1
 
 5. Agregamos los permisos de acceso en los archivos `trust-policy.json` y `access-policy.json`, luego creamos un rol con estos:
 ```
-create-role --role-name LambdaRekognitionRole --assume-role-policy-document file://trust-policy.json
+aws iam create-role --role-name LambdaRekognitionRole --assume-role-policy-document file://trust-policy.json
 ```
 ```
 aws iam put-role-policy --role-name LambdaRekognitionRole --policy-name LambdaPermissions --policy-document file://access-policy.json
