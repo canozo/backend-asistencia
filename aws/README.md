@@ -73,7 +73,7 @@ CAMERA_PW="claveEjemplo123"
 Este identificador debe ser un identificador valido en la base de datos MySQL, en la tabla `classroom`.
 
 ### Desplegar
-Una vez registrado y actualizado el AWS DeepLens, nos dirigimos a la consola e ingresamos a Desplegar un proyecto. Luego nos dirigimos a Crear un nuevo proyecto y seleccionamos el proyecto de ejemplo de Detección de rostros. Luego de crear el proyecto, nos debería de crear una nueva función lambda cuyo nombre empieza con `deeplens-` (posiblemente se llame `deeplens-face-detection`). Debemos ingresar a esta función y agregar las variables de entorno. Luego modificamos el código de la función concorde a el código en `deeplens-inference-function.py`.
+Una vez registrado y actualizado el AWS DeepLens, nos dirigimos a la consola e ingresamos a Desplegar un proyecto. Luego nos dirigimos a Crear un nuevo proyecto y seleccionamos Detección de rostros. Luego de crear el proyecto, nos debería de crear una nueva función lambda cuyo nombre empieza con `deeplens-` (posiblemente se llame `deeplens-face-detection`). Debemos ingresar a esta función y agregar las variables de entorno. Luego modificamos el código de la función concorde a el código en `deeplens-inference-function.py`.
 
 Luego de hacer esto, siguiendo las buenas prácticas de AWS, debemos crear un nuevo rol con todos los permisos necesarios a S3 y asignarle este rol a la cámara. El único permiso que necesitamos es `PutObject`, aunque podemos agregar acceso total a S3. Luego de crear el rol, obtenemos las credenciales necesarias (`Access key ID` y `Secret access key`), e ingresamos estas credenciales en el archivo `deeplens-inference-function.py`:
 ```py
