@@ -80,10 +80,11 @@ router.get('/capture/:key', auth.getToken, auth.verify(4), async (req, res) => {
         Key: `captures/${req.params.key}`,
         Bucket: process.env.MAIN_BUCKET,
       };
-      s3.getObject(params).createReadStream().pipe(file);
+      const stream = s3.getObject(params).createReadStream().pipe(file);
+      stream.on('finish', () => res.sendFile(local));
+    } else {
+      res.sendFile(local);
     }
-
-    res.sendFile(local);
   } catch (err) {
     res.status(500).json({ status: 'error', msg: 'Error al obtener imagen de estudiante' });
   }
