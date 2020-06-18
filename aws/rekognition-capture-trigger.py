@@ -37,14 +37,16 @@ def lambda_handler(event, context):
                 accountNumber = face['Item']['AccountNumber']['S']
                 if match['Face']['Confidence'] >= 90:
                     # There is a sure match, mark attendance and stop looking for faces
+                    if key.startswith('captures/'):
+                        key = key[9:]
                     data = urllib.urlencode({
                         'captureKey': key
                     })
-                    host = 'http://ec2-3-86-140-112.compute-1.amazonaws.com'
+                    host = 'https://ec2-3-86-140-112.compute-1.amazonaws.com'
                     url = host + '/api/attendance/{}/mark-account-num/{}'.format(idAttendanceLog, accountNumber)
                     req = urllib2.Request(url, data)
                     req.add_header('Authorization', 'Bearer ' + token)
-                    res = urllib2.urlopen(req)
+                    res = urllib2.urlopen(req, cafile='server.cert')
                     print(url)
                     break
             else:

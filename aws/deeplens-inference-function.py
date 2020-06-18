@@ -75,15 +75,20 @@ class LocalDisplay(Thread):
 
 def infinite_infer_run():
     """ Entry point of the lambda function"""
+    # Create an IoT client for sending to messages to the cloud.
+    client = greengrasssdk.client('iot-data')
+    iot_topic = '$aws/things/{}/infer'.format(os.environ['AWS_IOT_THING_NAME'])
+
     try:
         # set request to login with backend
         data = urllib.urlencode({
             'email': os.environ['CAMERA_USER'],
             'password': os.environ['CAMERA_PW']
         })
-        host = 'http://ec2-3-86-140-112.compute-1.amazonaws.com'
+        host = 'https://ec2-3-86-140-112.compute-1.amazonaws.com'
         url = host + '/api/auth/login'
         req = urllib2.Request(url, data)
+        cert = '/etc/asistencia/server.cert'
         token = ''
 
         # s3 client
@@ -103,10 +108,6 @@ def infinite_infer_run():
         # This face detection model is implemented as single shot detector (ssd).
         model_type = 'ssd'
         output_map = {1: 'face'}
-
-        # Create an IoT client for sending to messages to the cloud.
-        client = greengrasssdk.client('iot-data')
-        iot_topic = '$aws/things/{}/infer'.format(os.environ['AWS_IOT_THING_NAME'])
 
         # Create a local display instance that will dump the image bytes to a FIFO
         # file that the image can be rendered locally.
@@ -135,7 +136,7 @@ def infinite_infer_run():
             if int(time.time() * 1000.0) > token_age + 5400000:
                 # token expired, get another one
                 token_age = int(time.time() * 1000.0)
-                res = json.loads(urllib2.urlopen(req).read())
+                res = json.loads(urllib2.urlopen(req, cafile=cert).read())
                 if 'error' in res:
                     raise Exception('Couldn\'t authenticate @ backend: {}'.format(json.dump(res)))
                 token = res['token']

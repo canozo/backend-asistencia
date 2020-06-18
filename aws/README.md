@@ -44,7 +44,7 @@ aws iam put-role-policy --role-name LambdaRekognitionRole --policy-name LambdaPe
 
 6. Creamos una función lambda para manejar el ingreso de nuevas imagenes de usuarios al bucket S3 (`rekognition-upload-trigger.py`), esta función tiene el rol de LambdaRekognitionRole y se activa con un trigger en el bucket S3 en la carpeta `index/`.
 
-7. Creamos una función lambda para manejar el ingreso de nuevos rostros detectados a traves de nuestro AWS Deeplens al bucket S3 (`rekognition-capture-trigger.py`), esta función tiene el rol de LambdaRekognitionRole y se activa con un trigger en el bucket S3 en la carpeta `captures/`.
+7. Creamos una función lambda para manejar el ingreso de nuevos rostros detectados a traves de nuestro AWS Deeplens al bucket S3 (`rekognition-capture-trigger.py`), esta función tiene el rol de LambdaRekognitionRole y se activa con un trigger en el bucket S3 en la carpeta `captures/`. Adicionalmente, esta función necesita el certificado SSL para realizar peticiones de tipo HTTPS. En el editor de la función debemos agregar un nuevo archivo en la carpeta raíz llamado `server.cert` que contenga la llave publica generada por `openssl` (ver instrucciones del backend).
 
 ## AWS DeepLens
 La documentación del AWS DeepLens no esta totalmente actualizada, y el dispositivo tiene varios problemas al momento de registrarse con AWS: no se actualiza automáticamente como debería mediante el interfaz web, y el dispositivo no se puede utilizar si no esta totalmente actualizado.
@@ -71,6 +71,9 @@ CAMERA_PW="claveEjemplo123"
 ```
 
 Este identificador debe ser un identificador valido en la base de datos MySQL, en la tabla `class`.
+
+### Certificado SSL
+Ya que el DeepLens también realiza peticiones HTTPS, necesitamos guardar el certificado en el dispositivo. En este caso, se ingresa al dispositivo y se guarda el certificado en `/etc/asistencia/server.cert`.
 
 ### Desplegar
 Una vez registrado y actualizado el AWS DeepLens, nos dirigimos a la consola y ingresamos a Desplegar un proyecto. Luego nos dirigmos a Crear un nuevo proyecto y seleccionamos el proyecto de ejemplo de Deteccion de rostros. Luego de crear el proyecto, nos deberia de crear una nueva función lambda cuyo nombre empieza con `deeplens-` (posiblemente se llame `deeplens-face-detection`). Debemos ingresar a esta función y agregar las variables de entorno. Luego modificamos el codigo de la función concorde a el codigo en `deeplens-inference-function.py`.
