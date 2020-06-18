@@ -111,7 +111,7 @@ def infinite_infer_run():
 
         # Create a local display instance that will dump the image bytes to a FIFO
         # file that the image can be rendered locally.
-        local_display = LocalDisplay('480p')
+        local_display = LocalDisplay('1080p')
         local_display.start()
 
         # The sample projects come with optimized artifacts, hence only the artifact
