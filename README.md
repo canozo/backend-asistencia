@@ -58,6 +58,8 @@ server {
 	}
 
 	location /api {
+                client_max_body_size       5m;
+                client_body_buffer_size    5m;
 		proxy_pass http://localhost:5000;
 		proxy_http_version 1.1;
 		proxy_set_header Upgrade $http_upgrade;
