@@ -51,7 +51,8 @@ router.get('/:idAttendanceLog', auth.getToken, auth.verify(2), async (req, res) 
       concat_ws(' ', user.names, user.surnames) as student,
       user.account_number as accountNumber,
       id_marked_by as idMarkedBy,
-      marked_at as markedAt
+      marked_at as markedAt,
+      capture_key as captureKey
       from attendance_log al
       inner join section
       on al.id_section = section.id_section

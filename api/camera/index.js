@@ -63,9 +63,10 @@ router.get('/marked', auth.getToken, auth.verify(4), async (req, res) => {
 /**
  * Get capture key as image
  * @route GET /api/camera/capture/:key
+ * @permissions professor
  * @permissions camera
  */
-router.get('/capture/:key', auth.getToken, auth.verify(4), async (req, res) => {
+router.get('/capture/:key', auth.getToken, auth.verify(2, 4), async (req, res) => {
   const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
