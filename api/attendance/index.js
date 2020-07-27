@@ -61,7 +61,7 @@ router.get('/:idAttendanceLog', auth.getToken, auth.verify(2), async (req, res) 
       inner join user
       on user.id_user = sxs.id_student
       left join attendance_x_student axs
-      on al.id_attendance_log = axs.id_attendance_log
+      on al.id_attendance_log = axs.id_attendance_log and sxs.id_student = axs.id_student
       where al.id_attendance_log = ?
       and section.id_professor = ?
       and al.closed_at is null`,
