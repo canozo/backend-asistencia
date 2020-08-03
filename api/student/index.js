@@ -63,7 +63,7 @@ router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
   try {
     const result = await db.query(
       `select
-      section.id_section as idSection,
+      s.id_section as idSection,
       al.id_attendance_log as idLog,
       id_professor as idProfessor,
       id_marked_by as idMarkedBy,
@@ -71,18 +71,16 @@ router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
       class as className,
       code as classCode,
       al.opened_at as openedAt
-      from attendance_log al
-      inner join section
-      on al.id_section = section.id_section
-      inner join class
-      on section.id_class = class.id_class
-      inner join section_x_student sxs
-      on section.id_section = sxs.id_section
-      inner join user
-      on user.id_user = sxs.id_student
-      left join attendance_x_student axs
+      from attendance_x_student axs
+      inner join attendance_log al
       on al.id_attendance_log = axs.id_attendance_log
-      where user.id_user = ?`,
+      inner join section s
+      on s.id_section = al.id_section
+      inner join class
+      on s.id_class = class.id_class
+      inner join user
+      on user.id_user = s.id_professor
+      where id_student = ?`,
       [req.data.user.idUser],
     );
     res.json({ status: 'success', msg: 'Historial de asistencia obtenido', data: result });
