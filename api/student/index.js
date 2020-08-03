@@ -80,7 +80,8 @@ router.get('/attendance', auth.getToken, auth.verify(3), async (req, res) => {
       on al.id_section = sxs.id_section
       left join attendance_x_student axs
       on al.id_attendance_log = axs.id_attendance_log and sxs.id_student = axs.id_student
-      where sxs.id_student = ?`,
+      where sxs.id_student = ?
+      order by al.opened_at desc`,
       [req.data.user.idUser],
     );
     res.json({ status: 'success', msg: 'Historial de asistencia obtenido', data: result });
