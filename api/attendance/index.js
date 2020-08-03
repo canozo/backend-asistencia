@@ -214,6 +214,23 @@ router.post(
       return res.json({ status: 'error', msg: 'Error al verificar asistencia abierta' });
     }
 
+    try {
+      const result = await db.query(
+        `select count(*) as isRegistered
+        from section_x_student sxs
+        inner join attendance_log al
+        on al.id_section = sxs.id_section
+        where id_student = ? and id_attendance_log = ?`,
+        [idStudent, idAttendanceLog],
+      );
+      if (!result[0].isRegistered) {
+        return res.json({ status: 'error', msg: 'Estudiante no esta matriculado en la clase' });
+      }
+    } catch {
+      res.status(500);
+      return res.json({ status: 'error', msg: 'Error al verificar estudiante' });
+    }
+
     // mark student
     try {
       await db.query(
@@ -262,8 +279,13 @@ router.post(
     // get user id from student account number
     try {
       const result = await db.query(
-        'select id_user as idUser from user where account_number = ?',
-        [accountNumber],
+        `select id_user as idUser from user
+        inner join section_x_student sxs
+        on sxs.id_student = user.id_user
+        inner join attendance_log al
+        on al.id_section = sxs.id_section
+        where account_number = ? and id_attendance_log = ?`,
+        [accountNumber, idAttendanceLog],
       );
       if (result.length === 0) {
         return res.json({ status: 'error', msg: 'Error, número de cuenta no valido' });
